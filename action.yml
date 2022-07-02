@@ -1,0 +1,17 @@
+name: 'Maven format XML reports'
+author: 'tupac-rocher'
+description: 'Use XML report files of your Maven project to aggregate the information. You can use it in your Github Actions workflow'
+branding:
+  icon: 'info'  
+  color: 'green'
+inputs:
+  checkstyle-result-xml:
+    description: 'The xml file from which to retrieve information of the checkstyle analysis.'
+    required: true
+    default: 'test.xml'
+outputs:
+  comment-result:
+    description: 'A String that contains all the information'
+runs:
+  using: 'node16'
+  main: 'index.js'
