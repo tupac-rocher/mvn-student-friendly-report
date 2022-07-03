@@ -25,7 +25,6 @@ try {
     // `checkstyle-result-xml` input defined in action metadata file
 
     const checkstyleResultXml = core.getInput('checkstyle-result-xml')
-
     // Reading XML file
     let xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
 
@@ -43,7 +42,7 @@ try {
                     else{
                         formattedReport += getStringFromFile(file)
                     }
-                    core.setOutput("checkstyle-result-string", formattedReport);
+                    core.setOutput("checkstyle-comment", formattedReport);
                 }
             }
         }
@@ -51,6 +50,26 @@ try {
             core.setFailed(error.message);
         }
     });
+
+    // Reading CSV file
+    const designiteResultCsv = core.getInput('designite-result-csv')
+    const csv = require('csv-parser')
+    const results = []
+    fs.createReadStream(designiteResultCsv)
+    .pipe(csv({}))
+    .on('data', (data) => results.push(data))
+    .on('end', () => {
+        let formattedReport = ""
+        for (let codeSmell of results){
+            console.log(codeSmell)
+            formattedReport += codeSmell['Project Name']
+            formattedReport += codeSmell['Package Name']
+            formattedReport += '.' + codeSmell['Type Name'] + '\n'
+            formattedReport += codeSmell['Code Smell'] + '\n\n'
+        }
+        core.setOutput("designite-comment", formattedReport);
+    })
+
 } catch (error) {
     core.setFailed(error.message);
 }

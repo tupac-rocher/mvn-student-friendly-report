@@ -23,6 +23,7 @@
   "dependencies": {
     "@actions/core": "^1.9.0",
     "@actions/github": "^5.0.3",
+    "csv-parser": "^3.0.0",
     "xml2js": "^0.4.23"
   }
 }
