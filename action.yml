@@ -8,10 +8,16 @@ inputs:
   checkstyle-result-xml:
     description: 'The xml file from which to retrieve information of the checkstyle analysis.'
     required: true
-    default: 'test.xml'
+    default: 'checkstyle.xml'
+  designite-result-csv:
+    description: 'The csv file from which to retrieve information of the designite analysis'
+    required: true
+    default: 'designite.csv'
 outputs:
-  comment-result:
-    description: 'A String that contains all the information'
+  checkstyle-comment:
+    description: 'A String that contains all the information from the checkstyle analysis'
+  designite-comment:
+    description: 'A String that contains all the information from the designite analysis'
 runs:
   using: 'node16'
   main: 'index.js'

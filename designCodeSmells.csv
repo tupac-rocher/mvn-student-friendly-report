@@ -1,0 +1,3 @@
+Project Name,Package Name,Type Name,Code Smell
+.,com.montpellier,ComputerTest,Unutilized Abstraction
+.,com.montpellier,Office,Unutilized Abstraction
