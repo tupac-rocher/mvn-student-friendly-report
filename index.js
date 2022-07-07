@@ -3,6 +3,7 @@ const github = require('@actions/github');
 
 const xml2js = require('xml2js');
 const fs = require('fs');
+const csv = require('csv-parser')
 const parser = new xml2js.Parser({ attrkey: "ATTR" });
 
 // Format the file in a string format
@@ -23,6 +24,7 @@ const getStringFromFile = (file) => {
 try {
 
     // Checkstyle file treatment
+    //const checkstyleResultXml = 'checkstyle-result.xml'
     const checkstyleResultXml = core.getInput('checkstyle-result-xml')
     let xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
 
@@ -51,7 +53,7 @@ try {
 
     // Designite file treatment
     const designiteResultCsv = core.getInput('designite-result-csv')
-    const csv = require('csv-parser')
+    //const designiteResultCsv = "designCodeSmells.csv"
     const results = []
     fs.createReadStream(designiteResultCsv)
     .pipe(csv({}))
@@ -71,86 +73,88 @@ try {
 
     const getStringFromCKFile = (file, isClass) => {
         let fileMetrics = ""
-        fileMetrics += '##### ' + file['class'] + '\n---\n'
-        if(!isClass){
-            fileMetrics += '###### ' + file['method'] + '\n--\n'
-        }
-        fileMetrics += '| Metric | Value |\n'
-        fileMetrics += '| - | - |\n'
-        fileMetrics += '| CBO | ' + file['cbo'] + ' |\n'
-        fileMetrics += '| CBO Modified | ' + file['cboModified'] + ' |\n'
-        fileMetrics += '| FAN-IN | ' + file['fanin'] + ' |\n'
-        fileMetrics += '| FAN-OUT | ' + file['fanout'] + ' |\n'
-        fileMetrics += '| DIT | ' + file['dit'] + ' |\n'
-        fileMetrics += '| WMC | ' + file['wmc'] + ' |\n'
+        fileMetrics += '| ' + file['class']  + (isClass? '' : ' | ' + file['method'].slice(0, -2) )
+        fileMetrics += ' | ' + file['cbo'] + ' | ' + file['cboModified'] 
+                     + ' | ' + file['fanin'] + ' | ' + file['fanout']
+                     + ' | ' + file['dit'] + ' | ' + file['wmc']
         if(isClass){
-            fileMetrics += '| Total Fields Quantity | ' + file['totalFieldsQty'] + ' |\n'
-            fileMetrics += '| Total Methods Quantity | ' + file['totalMethodsQty'] + ' |\n\n'
+            fileMetrics += ' | ' + file['totalFieldsQty'] + ' | ' + file['totalMethodsQty'] + ' |\n'
         }
         else {
-            fileMetrics += '| Total Parameters Quantity | ' + file['parametersQty'] + ' |\n\n'
+            fileMetrics += ' | ' + file['parametersQty'] + ' |\n'
         }
         return fileMetrics
     }
 
+    const readCSVPromise = (fileName, isClass) => {
+        const stream = fs.createReadStream(fileName)
+        let fileData = ""
+        return new Promise((resolve) => {
+            stream
+                .pipe(csv({}))
+                .on('data', function(data) {
+                    fileData += getStringFromCKFile(data, isClass)
+                })
+                .on('end', function() {
+                  resolve(fileData);
+                });
+          });
+    }
+
+    const outputCKComment = (mainFile, testFile, isClass) => {
+        // wait until all files have been retrieved, then continue
+        Promise.all(
+            [
+                readCSVPromise(mainFile, isClass),
+                readCSVPromise(testFile, isClass)
+            ]
+        )
+            .then(function (data) {
+
+                // Header
+                let ckFormattedComment = ""
+                if(isClass){
+                    // Class
+                    ckFormattedComment += '### Classes\n'
+                    ckFormattedComment += '| Class | CBO | CBO Modified | FAN-IN | FAN-OUT | DIT | WMC'
+                    ckFormattedComment += ' | Total Fields Quantity | Total Methods Quantity |\n'
+                }
+                else {
+                    // Method
+                    ckFormattedComment += '### Methods\n'
+                    ckFormattedComment += '| Class | Method | CBO | CBO Modified | FAN-IN | FAN-OUT | DIT | WMC'
+                    ckFormattedComment += ' | Total Parameters Quantity |\n'
+                }
+                ckFormattedComment += ' | - | - | - | - | - | - | - | - | - |\n'
+ 
+                for(fileStringify of data){
+                    ckFormattedComment += fileStringify
+                }
+                ckFormattedComment += '\n'
+
+               if(isClass){
+                core.setOutput("ck-classes-comment", ckFormattedComment);
+               }
+               else {
+                core.setOutput("ck-methods-comment", ckFormattedComment);
+
+               }
+        });
+    }
+
     const classMainFile = core.getInput('ck-main-class-csv')
-    const resultsCKMainClass = []
-    fs.createReadStream(classMainFile)
-    .pipe(csv({}))
-    .on('data', (data) => resultsCKMainClass.push(data))
-    .on('end', () => {
-        let ckFormattedMainClassFile = '### Main Classes\n'
-        for (let file of resultsCKMainClass){
-            ckFormattedMainClassFile += getStringFromCKFile(file,true)
-        }
-        console.log(ckFormattedMainClassFile)
-        core.setOutput("ck-main-class", ckFormattedMainClassFile);
-    })
-
-    const methodMainFile = core.getInput('ck-main-method-csv')
-    const resultsCKMainMethod = []
-    fs.createReadStream(methodMainFile)
-    .pipe(csv({}))
-    .on('data', (data) => resultsCKMainMethod.push(data))
-    .on('end', () => {
-        let ckFormattedMainMethodFile = '#### Main Methods\n'
-        for (let file of resultsCKMainMethod){
-            ckFormattedMainMethodFile += getStringFromCKFile(file,false)
-        }
-        console.log(ckFormattedMainMethodFile)
-        core.setOutput("ck-main-method", ckFormattedMainMethodFile);
-    })
-
     const classTestFile = core.getInput('ck-test-class-csv')
-    const resultsCKTestClass = []
-    fs.createReadStream(classTestFile)
-    .pipe(csv({}))
-    .on('data', (data) => resultsCKTestClass.push(data))
-    .on('end', () => {
-        let ckFormattedTestClassFile = '#### Test Classes\n'
-        for (let file of resultsCKTestClass){
-            ckFormattedTestClassFile += getStringFromCKFile(file,true)
-        }
-        console.log(ckFormattedTestClassFile)
-        core.setOutput("ck-test-class", ckFormattedTestClassFile);
-    })
-
+    const methodMainFile = core.getInput('ck-main-method-csv')
     const methodTestFile = core.getInput('ck-test-method-csv')
 
-    const resultsCKTestMethod = []
-    fs.createReadStream(methodTestFile)
-    .pipe(csv({}))
-    .on('data', (data) => resultsCKTestMethod.push(data))
-    .on('end', () => {
-        let ckFormattedTestMethodFile = '#### Test Methods\n'
-        for (let file of resultsCKTestMethod){
-            ckFormattedTestMethodFile += getStringFromCKFile(file,false)
-        }
-        console.log(ckFormattedTestMethodFile)
-        core.setOutput("ck-test-method", ckFormattedTestMethodFile);
-    })
+    // const classMainFile = './main/class.csv'
+    // const classTestFile = './test/class.csv'
+    // const methodMainFile = './main/method.csv'
+    // const methodTestFile = './test/method.csv'
 
 
+    outputCKComment(classMainFile,classTestFile,true)
+    outputCKComment(methodMainFile, methodTestFile, false)
 
 } catch (error) {
     core.setFailed(error.message);

@@ -13,11 +13,31 @@ inputs:
     description: 'The csv file from which to retrieve information of the designite analysis'
     required: true
     default: 'designite.csv'
+  ck-main-class-csv:
+    description: 'The csv file from which to retrieve information of the classes from the main foler'
+    required: true
+    default: './main/class.csv'
+  ck-test-class-csv:
+    description: 'The csv file from which to retrieve information of the classes from the test foler'
+    required: true
+    default: './test/class.csv'
+  ck-main-method-csv:
+    description: 'The csv file from which to retrieve information of the methods from the main foler'
+    required: true
+    default: './main/method.csv'
+  ck-test-method-csv:
+    description: 'The csv file from which to retrieve information of the methods from the test foler'
+    required: true
+    default: './test/method.csv'
 outputs:
   checkstyle-comment:
     description: 'A String that contains all the information from the checkstyle analysis'
   designite-comment:
     description: 'A String that contains all the information from the designite analysis'
+  ck-classes-comment:
+    description: 'A String that contains all the information from the CK analysis on the classes'
+  ck-methods-comment:
+    description: 'A String that contains all the information from the CK analysis on the methods'
 runs:
   using: 'node16'
   main: 'index.js'
