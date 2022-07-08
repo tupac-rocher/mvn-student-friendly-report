@@ -21,6 +21,47 @@ const getStringFromFile = (file) => {
     return result
 }
 
+const getStringFromErrors = (errors) => {
+    let formattedReport = "| Error Category | Error Type | Location | Message |\n"
+    formattedReport += "| - | - | - | - |\n"
+    errors.sort(
+        function(a, b) {          
+           if (a.errorCategory === b.errorCategory) {
+              return a.errorType > b.errorType ? 1 : -1
+           }
+           return a.errorCategory > b.errorCategory ? 1 : -1;
+        }
+    );
+    for(let error of errors){
+        formattedReport += '| '+ error.errorCategory + ' | ' + error.errorType + ' | '
+        formattedReport += error.fileName + ' ('+ error.line + ':' + error.column + ')'
+        formattedReport += ' | ' + error.message + ' |\n' 
+    }
+    return formattedReport
+
+
+}
+
+const getFormattedFileObject = (file) => {
+    const errors = []
+
+    const fileName = file.ATTR.name.split('/java/')[1].replace(/\//g, ".")
+    for (let error of file.error){
+        const attributes = error.ATTR
+
+        const newErrorData = {}
+        newErrorData.fileName = fileName
+        newErrorData.line = attributes.line
+        newErrorData.column = attributes.column
+        const source = attributes.source.split('.')
+        newErrorData.errorCategory = source[5]
+        newErrorData.errorType = source[6]
+        newErrorData.message = attributes.message
+        errors.push(newErrorData)
+    }
+    return errors
+}
+
 try {
 
     // Checkstyle file treatment
@@ -34,14 +75,19 @@ try {
                 const report = result.checkstyle
                 if(report.file){
                     let formattedReport = ""
+                    let errors = []
                     if(Array.isArray(report.file)){
                         for(let file of report.file){
-                            formattedReport += getStringFromFile(file)
+                            //formattedReport += getStringFromFile(file)
+                            errors = errors.concat(getFormattedFileObject(file))
                         }
                     }
                     else{
                         formattedReport += getStringFromFile(file)
+                        errors = errors.concat(getFormattedFileObject(file))
                     }
+                    formattedReport = getStringFromErrors(errors)
+                    formattedReport += '\n'
                     core.setOutput("checkstyle-comment", formattedReport);
                 }
             }
@@ -53,7 +99,7 @@ try {
 
     // Designite file treatment
     const designiteResultCsv = core.getInput('designite-result-csv')
-    //const designiteResultCsv = "designCodeSmells.csv"
+    // const designiteResultCsv = "designCodeSmells.csv"
     const results = []
     fs.createReadStream(designiteResultCsv)
     .pipe(csv({}))
