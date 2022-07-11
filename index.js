@@ -6,40 +6,22 @@ const fs = require('fs');
 const csv = require('csv-parser')
 const parser = new xml2js.Parser({ attrkey: "ATTR" });
 
-// Format the file in a string format
-
-const getStringFromFile = (file) => {
-    var result = '\n' + file.ATTR.name + '\n\n'
-    for(let error of file.error){
-        const attributes = error.ATTR
-        const line = attributes.line? attributes.line : ''
-        const column = attributes.column? attributes.column : ''
-        const message = attributes.message? attributes.message : ''
-        const source = attributes.source? attributes.source : ''
-        result += message + '\n' + source + '(' + line + ':' + column + ')\n\n'
-    }
-    return result
-}
-
 const getStringFromErrors = (errors) => {
-    let formattedReport = "| Error Category | Error Type | Location | Message |\n"
-    formattedReport += "| - | - | - | - |\n"
-    errors.sort(
-        function(a, b) {          
-           if (a.errorCategory === b.errorCategory) {
-              return a.errorType > b.errorType ? 1 : -1
-           }
-           return a.errorCategory > b.errorCategory ? 1 : -1;
-        }
-    );
-    for(let error of errors){
-        formattedReport += '| '+ error.errorCategory + ' | ' + error.errorType + ' | '
-        formattedReport += error.fileName + ' ('+ error.line + ':' + error.column + ')'
-        formattedReport += ' | ' + error.message + ' |\n' 
+    let errorsComment = ""
+    let errorNames = errors.map((error) => {
+        return error.errorType
+    })
+    errorNames = [... new Set(errorNames)]
+    for (let currentError of errorNames){
+        errorsComment += '\n\n### ' + currentError + '\n'
+        const currentErrors = errors.filter((error) => {
+            if(currentError === error.errorType){
+                errorsComment += '- ' + error.fileName + ' ('+ error.line + ':' + error.column + ')\n'
+                return error
+            }
+        })
     }
-    return formattedReport
-
-
+    return errorsComment
 }
 
 const getFormattedFileObject = (file) => {
@@ -51,11 +33,17 @@ const getFormattedFileObject = (file) => {
 
         const newErrorData = {}
         newErrorData.fileName = fileName
-        newErrorData.line = attributes.line
-        newErrorData.column = attributes.column
+        newErrorData.line = attributes.line? attributes.line : '0'
+        newErrorData.column = attributes.column? attributes.column : '0'
         const source = attributes.source.split('.')
-        newErrorData.errorCategory = source[5]
-        newErrorData.errorType = source[6]
+        const errorType = source[6]
+        // add whitespaces
+        .replace(/([A-Z])/g, ' $1')
+        // uppercase the first character
+        .replace(/^./, function(str){ return str.toUpperCase(); })
+        // remove the ending 'Check'
+        .replace("Check", "")
+        newErrorData.errorType = errorType
         newErrorData.message = attributes.message
         errors.push(newErrorData)
     }
@@ -65,7 +53,7 @@ const getFormattedFileObject = (file) => {
 try {
 
     // Checkstyle file treatment
-    //const checkstyleResultXml = 'checkstyle-result.xml'
+    // const checkstyleResultXml = 'checkstyle-result.xml'
     const checkstyleResultXml = core.getInput('checkstyle-result-xml')
     let xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
 
@@ -74,21 +62,19 @@ try {
             if(result.checkstyle){
                 const report = result.checkstyle
                 if(report.file){
-                    let formattedReport = ""
+                    let checkstyleFormattedComment = ""
                     let errors = []
                     if(Array.isArray(report.file)){
                         for(let file of report.file){
-                            //formattedReport += getStringFromFile(file)
                             errors = errors.concat(getFormattedFileObject(file))
                         }
                     }
                     else{
-                        formattedReport += getStringFromFile(file)
                         errors = errors.concat(getFormattedFileObject(file))
                     }
-                    formattedReport = getStringFromErrors(errors)
-                    formattedReport += '\n'
-                    core.setOutput("checkstyle-comment", formattedReport);
+                    checkstyleFormattedComment = getStringFromErrors(errors)
+                    checkstyleFormattedComment += '\n'
+                    core.setOutput("checkstyle-comment", checkstyleFormattedComment);
                 }
             }
         }
@@ -105,14 +91,18 @@ try {
     .pipe(csv({}))
     .on('data', (data) => results.push(data))
     .on('end', () => {
-        let formattedReport = ""
-        for (let codeSmell of results){
-            formattedReport += codeSmell['Project Name']
-            formattedReport += codeSmell['Package Name']
-            formattedReport += '.' + codeSmell['Type Name'] + '\n'
-            formattedReport += codeSmell['Code Smell'] + '\n\n'
+        let designiteFormattedComment = ""
+        let codeSmells = [... new Set(results.map((result) => result['Code Smell']))]
+        for(let codeSmell of codeSmells){
+            designiteFormattedComment += '\n\n### ' + codeSmell + '\n'
+            for(let result of results){
+                // remove first '.'
+                const projectName =  result['Project Name'].slice(1)
+                designiteFormattedComment += '- ' + projectName
+                designiteFormattedComment += result['Package Name']
+                designiteFormattedComment += '.' + result['Type Name'] + '\n'            }
         }
-        core.setOutput("designite-comment", formattedReport);
+        core.setOutput("designite-comment", designiteFormattedComment);
     })
 
     // CK files treatment
@@ -183,7 +173,6 @@ try {
                }
                else {
                 core.setOutput("ck-methods-comment", ckFormattedComment);
-
                }
         });
     }
