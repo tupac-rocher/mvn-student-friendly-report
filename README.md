@@ -58,7 +58,7 @@ A Markdown formatted text displaying a list of code smells with their location
 
 Once you executed the goal of each plugin.
 
-```
+```yaml
   uses: tupac-rocher/mvn-format-xml-reports@v1.6
   with:
     checkstyle-result-xml: ${{ github.workspace }}/target/checkstyle-result.xml
