@@ -58,6 +58,7 @@ A Markdown formatted text displaying a list of code smells with their location
 
 Once you executed the goal of each plugin.
 
+```
   uses: tupac-rocher/mvn-format-xml-reports@v1.6
   with:
     checkstyle-result-xml: ${{ github.workspace }}/target/checkstyle-result.xml
@@ -66,3 +67,4 @@ Once you executed the goal of each plugin.
     ck-main-method-csv: ${{ github.workspace }}/src/main/java/method.csv
     ck-test-class-csv:  ${{ github.workspace }}/src/test/java/class.csv
     ck-test-method-csv:  ${{ github.workspace }}/src/test/java/method.csv
+```
