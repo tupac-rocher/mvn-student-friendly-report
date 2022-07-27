@@ -39,6 +39,7 @@ Once you executed the goal of each plugin.
 ```yaml
   uses: tupac-rocher/mvn-format-xml-reports@v1.6
   with:
+    jacoco-html-report: ${{ github.workspace }}/target/site/jacoco/index.html
     checkstyle-result-xml: ${{ github.workspace }}/target/checkstyle-result.xml
     designite-result-csv: ${{ github.workspace }}/target/designite/designCodeSmells.csv
     ck-main-class-csv: ${{ github.workspace }}/src/main/java/class.csv
