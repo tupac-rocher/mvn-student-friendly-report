@@ -5,6 +5,9 @@ branding:
   icon: 'info'  
   color: 'green'
 inputs:
+  jacoco-html-report:
+    description: 'The html file from which to retrieve information of test coverage analysis'
+    required: true
   checkstyle-result-xml:
     description: 'The xml file from which to retrieve information of the checkstyle analysis.'
     required: true
@@ -30,6 +33,8 @@ inputs:
     required: true
     default: './test/method.csv'
 outputs:
+  test-coverage-comment: 
+    description: 'A String that contains the total percentage of test coverage'
   checkstyle-comment:
     description: 'A String that contains all the information from the checkstyle analysis'
   designite-comment:
