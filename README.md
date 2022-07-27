@@ -37,7 +37,7 @@ You can use it in your Github Actions workflow.
 Once you executed the goal of each plugin.
 
 ```yaml
-  uses: tupac-rocher/mvn-format-xml-reports@v1.6
+  uses: tupac-rocher/mvn-format-xml-reports@v1.7
   with:
     jacoco-html-report: ${{ github.workspace }}/target/site/jacoco/index.html
     checkstyle-result-xml: ${{ github.workspace }}/target/checkstyle-result.xml
