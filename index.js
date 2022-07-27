@@ -5,6 +5,17 @@ const xml2js = require('xml2js');
 const fs = require('fs');
 const csv = require('csv-parser')
 const parser = new xml2js.Parser({ attrkey: "ATTR" });
+const HTMLParser = require('node-html-parser');
+
+// Test Coverage
+const jacocoHtmlReport = core.getInput('jacoco-html-report')
+fs.readFile(jacocoHtmlReport, 'utf8', function(err, html){
+    const root = HTMLParser.parse(html)
+    const testCoverage = root.querySelector('#c0').childNodes[0]._rawText
+    core.setOutput("test-coverage-comment", testCoverage);
+})
+
+// ------
 
 const getStringFromErrors = (errors) => {
     let errorsComment = ""
@@ -113,9 +124,13 @@ try {
         fileMetrics += ' | ' + file['cbo'] + ' | ' + file['cboModified'] 
                      + ' | ' + file['fanin'] + ' | ' + file['fanout']
                      + ' | ' + file['dit'] + ' | ' + file['wmc']
+        
+        // Class
         if(isClass){
             fileMetrics += ' | ' + file['totalFieldsQty'] + ' | ' + file['totalMethodsQty'] + ' |\n'
         }
+
+        // Method
         else {
             fileMetrics += ' | ' + file['parametersQty'] + ' |\n'
         }
