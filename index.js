@@ -9,6 +9,7 @@ const HTMLParser = require('node-html-parser');
 
 // Test Coverage
 const jacocoHtmlReport = core.getInput('jacoco-html-report')
+// const jacocoHtmlReport = 'target/site/jacoco/index.html'
 fs.readFile(jacocoHtmlReport, 'utf8', function(err, html){
     const root = HTMLParser.parse(html)
     const testCoverage = root.querySelector('#c0').childNodes[0]._rawText
@@ -116,95 +117,246 @@ try {
         core.setOutput("designite-comment", designiteFormattedComment);
     })
 
-    // CK files treatment
+    // Metrics treatment
 
-    const getStringFromCKFile = (file, isClass) => {
-        let fileMetrics = ""
-        fileMetrics += '| ' + file['class']  + (isClass? '' : ' | ' + file['method'].slice(0, -2) )
-        fileMetrics += ' | ' + file['cbo'] + ' | ' + file['cboModified'] 
-                     + ' | ' + file['fanin'] + ' | ' + file['fanout']
-                     + ' | ' + file['dit'] + ' | ' + file['wmc']
-        
-        // Class
-        if(isClass){
-            fileMetrics += ' | ' + file['totalFieldsQty'] + ' | ' + file['totalMethodsQty'] + ' |\n'
+    const classMainFile = core.getInput('ck-main-class-csv')
+    // const classMainFile = './main/class.csv'
+
+    const metricsXML = core.getInput('metrics-xml')
+    // const metricsXML = "metrics.xml"
+
+    // Returns the select metrics for the methods from JaSoMe
+    const getMethodMetrics = (metrics) => {
+        // Metrics of the Method
+        const metricNames = ['VG','NOP','NBD','Fin','Fout', 'TLOC']
+        const selectedMetrics = metrics.filter((metric) => {
+            return metricNames.includes(metric.ATTR.name)
+        })
+
+        const formattedMetrics = selectedMetrics.map((metric) => {
+            return {
+                [metric.ATTR.name] : metric.ATTR.value
+            }
+        })
+
+        let assembledMetrics = {}
+
+        for(let metric of formattedMetrics){
+            assembledMetrics = {
+                ...assembledMetrics,
+                ...metric
+            }
+        }
+        const methodMetrics = {
+            TLOC: assembledMetrics.TLOC,
+            NOP: assembledMetrics.NOP,
+            NBD: assembledMetrics.NBD,
+            FIN: assembledMetrics.Fin,
+            FOUT: assembledMetrics.Fout,
+            CC: assembledMetrics.VG
         }
 
-        // Method
-        else {
-            fileMetrics += ' | ' + file['parametersQty'] + ' |\n'
-        }
-        return fileMetrics
+        return methodMetrics
     }
 
-    const readCSVPromise = (fileName, isClass) => {
-        const stream = fs.createReadStream(fileName)
-        let fileData = ""
+    // Returns the classes and the methods with the selected metrics from JaSoMe
+    const getjasomeDataFormatted = (data) => {
+
+        const project = data['Project']
+        const classes = []
+        let methods = []
+
+        // Extract main classes
+        for(let currentPackage of project['Packages'][0]['Package']){
+
+            for(let currentClass of currentPackage['Classes'][0]['Class']){
+                // Only classes from the main folder
+                if(!currentClass.ATTR.sourceFile.startsWith('./test')){
+
+                    // Class
+
+                    // Location
+                    const sourceFile = currentClass.ATTR.sourceFile
+                    const location = sourceFile.split('/java/')[1].replace(/\//g, ".").replace(/.java$/, '');
+
+                    let newClass = {
+                        location: location
+                    }
+
+                    // Metrics of the Class
+                    const metricNames = ['AIF','MIF','Av','PMd','Md']
+                    const metricsSelected = currentClass['Metrics'][0]['Metric'].filter((metric) => {
+                        return metricNames.includes(metric.ATTR.name)
+                    })
+
+                    const metrics = metricsSelected.map((metric) => {
+                        return {
+                            [metric.ATTR.name] : metric.ATTR.value
+                        }
+                    })
+
+                    let assembledMetrics = {}
+
+                    for(let metric of metrics){
+                        assembledMetrics = {
+                            ...assembledMetrics,
+                            ...metric
+                        }
+                    }
+
+                    // Final object
+                    newClass = {
+                        ...newClass,
+                        AIF: assembledMetrics.AIF,
+                        MIF: assembledMetrics.MIF,
+                        PA: assembledMetrics.Av,
+                        MHF: 1 - (assembledMetrics.PMd / assembledMetrics.Md)
+                    }
+                    classes.push(newClass)
+
+                    // Methods
+
+                    let classMethods = currentClass['Methods'][0]['Method']
+                    classMethods = classMethods.map((method) => {
+                        const metricsToTreat = method['Metrics'][0]['Metric']
+                        const metrics = getMethodMetrics(metricsToTreat)
+                        const newMethod = {
+                            location: location,
+                            line: method.ATTR.lineStart,
+                            name: method.ATTR.name,
+                            ...metrics
+                        }
+                        return newMethod
+                    })
+                    methods = methods.concat(classMethods)
+                }
+            }
+        }
+        return {
+            classes: classes,
+            methods: methods
+        }
+    }
+
+    // Returns the classes and the methods with the selected metrics from JaSoMe out of a Promise
+    const jasomeDataFormat = (jasomeXMLFile) => {
+        return new Promise(function(resolve, reject){
+            let metricsFile = fs.readFileSync(jasomeXMLFile, "utf8");
+            parser.parseString(metricsFile, function(error, result) {
+                if(error){
+                    core.setFailed(error.message);
+                    reject(error);
+                    
+                }
+                else {
+                    const dataFormatted = getjasomeDataFormatted(result)
+                    resolve(dataFormatted);
+                }
+            })
+        });
+    }
+
+    // Returns the classes with the selected metrics from CK out of Promise
+    const ckMainClassDataFormat = (ckMainClassFile) => {
+        const stream = fs.createReadStream(ckMainClassFile)
+        let classes = []
         return new Promise((resolve) => {
             stream
                 .pipe(csv({}))
                 .on('data', function(data) {
-                    fileData += getStringFromCKFile(data, isClass)
+                    const newClass = {
+                        location: data['class'],
+                        fanin: data['fanin'],
+                        fanout: data['fanout'],
+                        tcc: data['tcc']
+                    }
+                    classes.push(newClass)
                 })
                 .on('end', function() {
-                  resolve(fileData);
+                  resolve(classes);
                 });
           });
+
     }
 
-    const outputCKComment = (mainFile, testFile, isClass) => {
-        // wait until all files have been retrieved, then continue
+    // Returns a formatted String to output the metrics of each class
+    const getClassMetricsComment = (classes) => {
+        let comment = ''
+        // Ttitle
+        comment += '### Classes\n'
+        // Header
+        comment += '| Class | FAN-IN | FAN-OUT | TCC | AIF | MIF | Public Attributes | MHF |\n'
+        comment += ' | - | - | - | - | - | - | - | -  |\n'
+        for(let currentClass of classes){
+            comment += currentClass.location + ' | ' + 
+                       currentClass.fanin + ' | ' + 
+                       currentClass.fanout + ' | ' + 
+                       currentClass.tcc + ' | ' + 
+                       currentClass.AIF + ' | ' + 
+                       currentClass.MIF + ' | ' + 
+                       currentClass.PA + ' | ' + 
+                       currentClass.MHF + ' |\n' 
+        }
+        return comment
+    }
+
+    // Returns a formatted String to output the metrics of each method
+    const getMethodMetricsComment = (methods) => {
+
+        let comment = ''
+        // Ttitle
+        comment += '### Methods\n'
+        // Header
+        comment += '| Class | Method | Total Line of Code | NOP | NBD | FAN-IN | FAN-OUT | McCabe Cyclomatic Complexity |\n'
+        comment += ' | - | - | - | - | - | - | - | -  |\n'
+        for(let currentMethod of methods){
+            comment += currentMethod.location + ' | ' + 
+                       currentMethod.name + ' | ' + 
+                       currentMethod.TLOC + ' | ' + 
+                       currentMethod.NOP + ' | ' + 
+                       currentMethod.NBD + ' | ' + 
+                       currentMethod.FIN + ' | ' + 
+                       currentMethod.FOUT + ' | ' + 
+                       currentMethod.CC + ' |\n' 
+        }
+        return comment
+
+    }
+
+    const outputMetricComment = (metricsXMLFile, ckMainFile) => {
+        // wait until all formatted data have been retrieved, then continue
         Promise.all(
             [
-                readCSVPromise(mainFile, isClass),
-                readCSVPromise(testFile, isClass)
+                jasomeDataFormat(metricsXMLFile),
+                ckMainClassDataFormat(ckMainFile)
             ]
         )
-            .then(function (data) {
+            .then(function (data) {                
+                const jasomeData = data[0]
+                const ckData = data[1]
 
-                // Header
-                let ckFormattedComment = ""
-                if(isClass){
-                    // Class
-                    ckFormattedComment += '### Classes\n'
-                    ckFormattedComment += '| Class | CBO | CBO Modified | FAN-IN | FAN-OUT | DIT | WMC'
-                    ckFormattedComment += ' | Total Fields Quantity | Total Methods Quantity |\n'
-                }
-                else {
-                    // Method
-                    ckFormattedComment += '### Methods\n'
-                    ckFormattedComment += '| Class | Method | CBO | CBO Modified | FAN-IN | FAN-OUT | DIT | WMC'
-                    ckFormattedComment += ' | Total Parameters Quantity |\n'
-                }
-                ckFormattedComment += ' | - | - | - | - | - | - | - | - | - |\n'
- 
-                for(fileStringify of data){
-                    ckFormattedComment += fileStringify
-                }
-                ckFormattedComment += '\n'
+                // merge classes
+                const classes = ckData.map((currentClass) => {
+                    const classToMerge = jasomeData.classes.find((currentJaSoMeClass) => {
+                        return currentJaSoMeClass.location === currentClass.location
+                    })
+                    const newClass = {
+                        ...currentClass,
+                        ...classToMerge
+                    }
+                    return newClass
+                })
 
-               if(isClass){
-                core.setOutput("ck-classes-comment", ckFormattedComment);
-               }
-               else {
-                core.setOutput("ck-methods-comment", ckFormattedComment);
-               }
+                const classMetricsComment = getClassMetricsComment(classes)
+                const methodMetricsComment = getMethodMetricsComment(jasomeData.methods)
+                
+                const metricsFormattedComment = classMetricsComment + methodMetricsComment
+                core.setOutput("metrics-comment", metricsFormattedComment);
+   
         });
     }
 
-    const classMainFile = core.getInput('ck-main-class-csv')
-    const classTestFile = core.getInput('ck-test-class-csv')
-    const methodMainFile = core.getInput('ck-main-method-csv')
-    const methodTestFile = core.getInput('ck-test-method-csv')
-
-    // const classMainFile = './main/class.csv'
-    // const classTestFile = './test/class.csv'
-    // const methodMainFile = './main/method.csv'
-    // const methodTestFile = './test/method.csv'
-
-
-    outputCKComment(classMainFile,classTestFile,true)
-    outputCKComment(methodMainFile, methodTestFile, false)
+    outputMetricComment(metricsXML, classMainFile)
 
 } catch (error) {
     core.setFailed(error.message);
