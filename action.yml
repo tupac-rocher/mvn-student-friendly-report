@@ -20,10 +20,14 @@ inputs:
     description: 'The xml file from which to retrieve information of the checkstyle analysis.'
     required: true
     default: 'checkstyle.xml'
-  designite-result-csv:
-    description: 'The csv file from which to retrieve information of the designite analysis'
+  designite-design-result-csv:
+    description: 'The csv file from which to retrieve design smells of the designite analysis'
     required: true
-    default: 'designite.csv'
+    default: 'designCodeSmells-2.csv'
+  designite-implementation-result-csv:
+    description: 'The csv file from which to retrieve implementation smells of the designite analysis'
+    required: true
+    default: 'implementationCodeSmells.csv'
 outputs:
   test-coverage-comment: 
     description: 'A String that contains the total percentage of test coverage'
@@ -31,8 +35,8 @@ outputs:
     description: 'A String that contains all the information about the selected metrics (Class-level and Method-level)'
   checkstyle-comment:
     description: 'A String that contains all the information from the checkstyle analysis'
-  designite-comment:
-    description: 'A String that contains all the information from the designite analysis'
+  code-smells-comment:
+    description: 'A String that contains all the code smells from the designite analysis'
 runs:
   using: 'node16'
   main: 'index.js'
