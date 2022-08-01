@@ -26,7 +26,7 @@ const designiteImplementationCSCsv = "implementationCodeSmells.csv"
 // Test Coverage
 
 fs.readFile(jacocoHtmlReport, 'utf8', function(err, html){
-    if(error === null) { 
+    if(err === null) { 
         const root = HTMLParser.parse(html)
         const testCoverage = root.querySelector('#c0').childNodes[0]._rawText
         core.setOutput("test-coverage-comment", testCoverage);
@@ -120,41 +120,123 @@ try {
 
     // Designite file treatment
 
-    const results = []
-    fs.createReadStream(designiteDesignCSCsv)
-    .pipe(csv({}))
-    .on('data', (data) => results.push(data))
-    .on('end', () => {
-
-        let designiteFormattedComment = ""
+    // Returns the design Code smells restructured from Designite out of a Promise
+    const getDesignCodeSmells = (data) => {
+        const codeSmells = []
 
         // List of design code smells reported
-        let codeSmells = [... new Set(results.map((result) => result['Code Smell']))]
+        let codeSmellsReported = [... new Set(data.map((result) => result['Code Smell']))]
 
-        for(let codeSmell of codeSmells){
-            designiteFormattedComment += '\n\n### ' + codeSmell + '\n'
-            console.log(results)
-            for(let result of results){
+        for(let codeSmell of codeSmellsReported){
+            const newCodeSmell = {
+                name: codeSmell,
+                files: []
+            }
+            for(let result of data){
                 if(result['Code Smell'] === codeSmell){
-                    designiteFormattedComment += '- ' + result['Package Name']
-                    designiteFormattedComment += '.' + result['Type Name'] + '\n' 
+                    newCodeSmell.files.push(result['Package Name'] + '.' + result['Type Name'])
                 }
             }
+            codeSmells.push(newCodeSmell)
+            
         }
-        console.log(designiteFormattedComment)
-        core.setOutput("designite-comment", designiteFormattedComment);
-    })
+        return codeSmells
+    }
+
+    // Returns the design Code smells restructured from Designite out of a Promise
+    const designCodeSmellsFormat = (file) => {
+        return new Promise(function(resolve, reject){
+            const results = []
+            fs.createReadStream(file)
+                .pipe(csv({}))
+                .on('error', function(error){
+                    reject(error)
+                })
+                .on('data', (data) => results.push(data))
+                .on('end', () => {
+                    const dataFormatted = getDesignCodeSmells(results)
+                    resolve(dataFormatted);
+            })
+        });
+    }
+
+
+    // Returns the implementation Code smells restructured from Designite out of a Promise
+    const getImplementationCodeSmells = (data) => {
+        const codeSmells = []
+
+        // List of design code smells reported
+        let codeSmellsReported = [... new Set(data.map((result) => result['Code Smell']))]
+
+        for(let codeSmell of codeSmellsReported){
+            const newCodeSmell = {
+                name: codeSmell,
+                files: []
+            }
+            for(let result of data){
+                if(result['Code Smell'] === codeSmell){
+                    newCodeSmell.files.push(result['Package Name'] + '.' + result['Type Name'] + '.' + result['Method Name'])
+                }
+            }
+            codeSmells.push(newCodeSmell)
+            
+        }
+        return codeSmells
+    }
+
+    // Returns the implementation Code smells restructured from Designite out of a Promise
+    const implementationCodeSmellsFormat = (file) => {
+        return new Promise(function(resolve, reject){
+            const results = []
+            fs.createReadStream(file)
+                .pipe(csv({}))
+                .on('error', function(error){
+                    reject(error)
+                })
+                .on('data', (data) => results.push(data))
+                .on('end', () => {
+                    const dataFormatted = getImplementationCodeSmells(results)
+                    resolve(dataFormatted);
+            })
+        });
+    }
 
     const outputDesigniteComment = (designCodeSmellsFile, implementationCodeSmells) => {
         Promise.all(
             [
-                jasomeDataFormat(metricsXMLFile),
-                ckMainClassDataFormat(ckMainFile)
+                designCodeSmellsFormat(designCodeSmellsFile),
+                implementationCodeSmellsFormat(implementationCodeSmells)
             ]
         ).then( function (data) {
+            let comment = ""
+            if(data[0].length !== 0){
+                comment += "### Design\n"
+                for(let codeSmell of data[0]){
+                    comment += "#### " + codeSmell.name + "\n"
+                    if(codeSmell.files){
+                        for(let file of codeSmell.files){
+                            comment += " - " + file + "\n"
+                        }
+                    } 
+                }
+            }
+            if(data[1].length !== 0){
+                comment += "### Implementation\n"
+                for(let codeSmell of data[1]){
+                    comment += "#### " + codeSmell.name + "\n"
+                    if(codeSmell.files){
+                        for(let file of codeSmell.files){
+                            comment += " - " + file + "\n"
+                        }
+                    } 
+                }
+            }
 
+            console.log(comment)
         });
     }
+
+    outputDesigniteComment(designiteDesignCSCsv,designiteImplementationCSCsv)
 
     // Metrics treatment
 
