@@ -151,9 +151,9 @@ try {
                 jasomeDataFormat(metricsXMLFile),
                 ckMainClassDataFormat(ckMainFile)
             ]
-        ).then( function (data) => {
+        ).then( function (data) {
 
-        })
+        });
     }
 
     // Metrics treatment
