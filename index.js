@@ -9,19 +9,19 @@ const HTMLParser = require('node-html-parser');
 
 //Inputs
 
-const jacocoHtmlReport = 'target/site/jacoco/index.html'
-const classMainFile = './main/class.csv'
-const metricsXML = "metrics.xml"
-const checkstyleResultXml = 'checkstyle-result-2.xml'
-const designiteDesignCSCsv = "designCodeSmells-2.csv"
-const designiteImplementationCSCsv = "implementationCodeSmells.csv"
+// const jacocoHtmlReport = 'target/site/jacoco/index.html'
+// const classMainFile = './main/class.csv'
+// const metricsXML = "metrics.xml"
+// const checkstyleResultXml = 'checkstyle-result-2.xml'
+// const designiteDesignCSCsv = "designCodeSmells-2.csv"
+// const designiteImplementationCSCsv = "implementationCodeSmells.csv"
 
-// const jacocoHtmlReport = core.getInput('jacoco-html-report')
-// const classMainFile = core.getInput('ck-main-class-csv')
-// const metricsXML = core.getInput('metrics-xml')
-// const checkstyleResultXml = core.getInput('checkstyle-result-xml')
-// const designiteDesignResultCsv = core.getInput('designite-design-result-csv')
-// const designiteImplementationResultCsv = core.getInput('designite-implementation-result-csv')
+const jacocoHtmlReport = core.getInput('jacoco-html-report')
+const classMainFile = core.getInput('ck-main-class-csv')
+const metricsXML = core.getInput('metrics-xml')
+const checkstyleResultXml = core.getInput('checkstyle-result-xml')
+const designiteDesignResultCsv = core.getInput('designite-design-result-csv')
+const designiteImplementationResultCsv = core.getInput('designite-implementation-result-csv')
 
 // Test Coverage
 
@@ -232,11 +232,11 @@ try {
                 }
             }
 
-            console.log(comment)
+            core.setOutput("code-smells-comment", comment);
         });
     }
 
-    outputDesigniteComment(designiteDesignCSCsv,designiteImplementationCSCsv)
+    outputDesigniteComment(designiteDesignResultCsv,designiteImplementationResultCsv)
 
     // Metrics treatment
 
