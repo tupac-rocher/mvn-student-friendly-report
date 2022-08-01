@@ -7,18 +7,33 @@ const csv = require('csv-parser')
 const parser = new xml2js.Parser({ attrkey: "ATTR" });
 const HTMLParser = require('node-html-parser');
 
-// Test Coverage
-const jacocoHtmlReport = core.getInput('jacoco-html-report')
+//Inputs
+
 // const jacocoHtmlReport = 'target/site/jacoco/index.html'
+// const classMainFile = './main/class.csv'
+// const metricsXML = "metrics.xml"
+// const checkstyleResultXml = 'checkstyle-result-2.xml'
+// const designiteResultCsv = "designCodeSmells.csv"
+
+const jacocoHtmlReport = core.getInput('jacoco-html-report')
+const classMainFile = core.getInput('ck-main-class-csv')
+const metricsXML = core.getInput('metrics-xml')
+const checkstyleResultXml = core.getInput('checkstyle-result-xml')
+const designiteResultCsv = core.getInput('designite-result-csv')
+
+
+// Test Coverage
+
 fs.readFile(jacocoHtmlReport, 'utf8', function(err, html){
     const root = HTMLParser.parse(html)
     const testCoverage = root.querySelector('#c0').childNodes[0]._rawText
     core.setOutput("test-coverage-comment", testCoverage);
 })
 
-// ------
 
-const getStringFromErrors = (errors) => {
+// Checkstyle file treatment
+
+const getCommentFromErrors = (errors) => {
     let errorsComment = ""
     let errorNames = errors.map((error) => {
         return error.errorType
@@ -40,33 +55,33 @@ const getFormattedFileObject = (file) => {
     const errors = []
 
     const fileName = file.ATTR.name.split('/java/')[1].replace(/\//g, ".")
-    for (let error of file.error){
-        const attributes = error.ATTR
-
-        const newErrorData = {}
-        newErrorData.fileName = fileName
-        newErrorData.line = attributes.line? attributes.line : '0'
-        newErrorData.column = attributes.column? attributes.column : '0'
-        const source = attributes.source.split('.')
-        const errorType = source[6]
-        // add whitespaces
-        .replace(/([A-Z])/g, ' $1')
-        // uppercase the first character
-        .replace(/^./, function(str){ return str.toUpperCase(); })
-        // remove the ending 'Check'
-        .replace("Check", "")
-        newErrorData.errorType = errorType
-        newErrorData.message = attributes.message
-        errors.push(newErrorData)
+    if(file.error){
+        for (let error of file.error){
+            const attributes = error.ATTR
+    
+            const newErrorData = {}
+            newErrorData.fileName = fileName
+            newErrorData.line = attributes.line? attributes.line : '0'
+            newErrorData.column = attributes.column? attributes.column : '0'
+            const source = attributes.source.split('.')
+            const errorType = source[6]
+            // add whitespaces
+            .replace(/([A-Z])/g, ' $1')
+            // uppercase the first character
+            .replace(/^./, function(str){ return str.toUpperCase(); })
+            // remove the ending 'Check'
+            .replace("Check", "")
+            newErrorData.errorType = errorType
+            newErrorData.message = attributes.message
+            errors.push(newErrorData)
+        }
     }
+    
     return errors
 }
 
 try {
 
-    // Checkstyle file treatment
-    // const checkstyleResultXml = 'checkstyle-result.xml'
-    const checkstyleResultXml = core.getInput('checkstyle-result-xml')
     let xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
 
     parser.parseString(xml_string, function(error, result) {
@@ -84,7 +99,9 @@ try {
                     else{
                         errors = errors.concat(getFormattedFileObject(file))
                     }
-                    checkstyleFormattedComment = getStringFromErrors(errors)
+
+
+                    checkstyleFormattedComment = getCommentFromErrors(errors)
                     checkstyleFormattedComment += '\n'
                     core.setOutput("checkstyle-comment", checkstyleFormattedComment);
                 }
@@ -96,8 +113,7 @@ try {
     });
 
     // Designite file treatment
-    const designiteResultCsv = core.getInput('designite-result-csv')
-    // const designiteResultCsv = "designCodeSmells.csv"
+
     const results = []
     fs.createReadStream(designiteResultCsv)
     .pipe(csv({}))
@@ -118,12 +134,6 @@ try {
     })
 
     // Metrics treatment
-
-    const classMainFile = core.getInput('ck-main-class-csv')
-    // const classMainFile = './main/class.csv'
-
-    const metricsXML = core.getInput('metrics-xml')
-    // const metricsXML = "metrics.xml"
 
     // Returns the select metrics for the methods from JaSoMe
     const getMethodMetrics = (metrics) => {
