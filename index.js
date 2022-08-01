@@ -9,25 +9,31 @@ const HTMLParser = require('node-html-parser');
 
 //Inputs
 
-// const jacocoHtmlReport = 'target/site/jacoco/index.html'
-// const classMainFile = './main/class.csv'
-// const metricsXML = "metrics.xml"
-// const checkstyleResultXml = 'checkstyle-result-2.xml'
-// const designiteResultCsv = "designCodeSmells.csv"
+const jacocoHtmlReport = 'target/site/jacoco/index.html'
+const classMainFile = './main/class.csv'
+const metricsXML = "metrics.xml"
+const checkstyleResultXml = 'checkstyle-result-2.xml'
+const designiteDesignCSCsv = "designCodeSmells-2.csv"
+const designiteImplementationCSCsv = "implementationCodeSmells.csv"
 
-const jacocoHtmlReport = core.getInput('jacoco-html-report')
-const classMainFile = core.getInput('ck-main-class-csv')
-const metricsXML = core.getInput('metrics-xml')
-const checkstyleResultXml = core.getInput('checkstyle-result-xml')
-const designiteResultCsv = core.getInput('designite-result-csv')
-
+// const jacocoHtmlReport = core.getInput('jacoco-html-report')
+// const classMainFile = core.getInput('ck-main-class-csv')
+// const metricsXML = core.getInput('metrics-xml')
+// const checkstyleResultXml = core.getInput('checkstyle-result-xml')
+// const designiteDesignResultCsv = core.getInput('designite-design-result-csv')
+// const designiteImplementationResultCsv = core.getInput('designite-implementation-result-csv')
 
 // Test Coverage
 
 fs.readFile(jacocoHtmlReport, 'utf8', function(err, html){
-    const root = HTMLParser.parse(html)
-    const testCoverage = root.querySelector('#c0').childNodes[0]._rawText
-    core.setOutput("test-coverage-comment", testCoverage);
+    if(error === null) { 
+        const root = HTMLParser.parse(html)
+        const testCoverage = root.querySelector('#c0').childNodes[0]._rawText
+        core.setOutput("test-coverage-comment", testCoverage);
+    }
+    else {
+        core.setFailed(error.message);
+    } 
 })
 
 
@@ -115,23 +121,40 @@ try {
     // Designite file treatment
 
     const results = []
-    fs.createReadStream(designiteResultCsv)
+    fs.createReadStream(designiteDesignCSCsv)
     .pipe(csv({}))
     .on('data', (data) => results.push(data))
     .on('end', () => {
+
         let designiteFormattedComment = ""
+
+        // List of design code smells reported
         let codeSmells = [... new Set(results.map((result) => result['Code Smell']))]
+
         for(let codeSmell of codeSmells){
             designiteFormattedComment += '\n\n### ' + codeSmell + '\n'
+            console.log(results)
             for(let result of results){
-                // remove first '.'
-                const projectName =  result['Project Name'].slice(1)
-                designiteFormattedComment += '- ' + projectName
-                designiteFormattedComment += result['Package Name']
-                designiteFormattedComment += '.' + result['Type Name'] + '\n'            }
+                if(result['Code Smell'] === codeSmell){
+                    designiteFormattedComment += '- ' + result['Package Name']
+                    designiteFormattedComment += '.' + result['Type Name'] + '\n' 
+                }
+            }
         }
+        console.log(designiteFormattedComment)
         core.setOutput("designite-comment", designiteFormattedComment);
     })
+
+    const outputDesigniteComment = (designCodeSmellsFile, implementationCodeSmells) => {
+        Promise.all(
+            [
+                jasomeDataFormat(metricsXMLFile),
+                ckMainClassDataFormat(ckMainFile)
+            ]
+        ).then( function (data) => {
+
+        })
+    }
 
     // Metrics treatment
 
