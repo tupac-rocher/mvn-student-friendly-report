@@ -7,116 +7,35 @@ const csv = require('csv-parser')
 const parser = new xml2js.Parser({ attrkey: "ATTR" });
 const HTMLParser = require('node-html-parser');
 
+const test_coverage_treatment = require('./test_coverage_treatment')
+
 //Inputs
 
-// const jacocoHtmlReport = 'target/site/jacoco/index.html'
-// const classMainFile = './main/class.csv'
-// const metricsXML = "metrics.xml"
-// const checkstyleResultXml = 'checkstyle-result-2.xml'
-// const designiteDesignCSCsv = "designCodeSmells-2.csv"
-// const designiteImplementationCSCsv = "implementationCodeSmells.csv"
+const jacocoHtmlReport = 'target/site/jacoco/index.html'
+const classMainFile = './main/class.csv'
+const metricsXML = "metrics.xml"
+const checkstyleResultXml = 'checkstyle-result-2.xml'
+const designiteDesignCSCsv = "designCodeSmells-2.csv"
+const designiteImplementationCSCsv = "implementationCodeSmells.csv"
 
-const jacocoHtmlReport = core.getInput('jacoco-html-report')
-const classMainFile = core.getInput('ck-main-class-csv')
-const metricsXML = core.getInput('metrics-xml')
-const checkstyleResultXml = core.getInput('checkstyle-result-xml')
-const designiteDesignResultCsv = core.getInput('designite-design-result-csv')
-const designiteImplementationResultCsv = core.getInput('designite-implementation-result-csv')
+// const jacocoHtmlReport = core.getInput('jacoco-html-report')
+// const classMainFile = core.getInput('ck-main-class-csv')
+// const metricsXML = core.getInput('metrics-xml')
+// const checkstyleResultXml = core.getInput('checkstyle-result-xml')
+// const designiteDesignResultCsv = core.getInput('designite-design-result-csv')
+// const designiteImplementationResultCsv = core.getInput('designite-implementation-result-csv')
 
-// Test Coverage
 
-fs.readFile(jacocoHtmlReport, 'utf8', function(err, html){
-    if(err === null) { 
-        const root = HTMLParser.parse(html)
-        const testCoverage = root.querySelector('#c0').childNodes[0]._rawText
-        core.setOutput("test-coverage-comment", testCoverage);
-    }
-    else {
-        core.setFailed(error.message);
-    } 
+const roundNumber = (number) => {
+    return Math.round((number + Number.EPSILON) * 100) / 100
+}
+
+Promise.all([
+    test_coverage_treatment.getTestCoverageComment(jacocoHtmlReport)
+]).then((data) => {
+    console.log(data[0])
 })
-
-
-// Checkstyle file treatment
-
-const getCommentFromErrors = (errors) => {
-    let errorsComment = ""
-    let errorNames = errors.map((error) => {
-        return error.errorType
-    })
-    errorNames = [... new Set(errorNames)]
-    for (let currentError of errorNames){
-        errorsComment += '\n\n### ' + currentError + '\n'
-        const currentErrors = errors.filter((error) => {
-            if(currentError === error.errorType){
-                errorsComment += '- ' + error.fileName + ' ('+ error.line + ':' + error.column + ')\n'
-                return error
-            }
-        })
-    }
-    return errorsComment
-}
-
-const getFormattedFileObject = (file) => {
-    const errors = []
-
-    const fileName = file.ATTR.name.split('/java/')[1].replace(/\//g, ".")
-    if(file.error){
-        for (let error of file.error){
-            const attributes = error.ATTR
-    
-            const newErrorData = {}
-            newErrorData.fileName = fileName
-            newErrorData.line = attributes.line? attributes.line : '0'
-            newErrorData.column = attributes.column? attributes.column : '0'
-            const source = attributes.source.split('.')
-            const errorType = source[6]
-            // add whitespaces
-            .replace(/([A-Z])/g, ' $1')
-            // uppercase the first character
-            .replace(/^./, function(str){ return str.toUpperCase(); })
-            // remove the ending 'Check'
-            .replace("Check", "")
-            newErrorData.errorType = errorType
-            newErrorData.message = attributes.message
-            errors.push(newErrorData)
-        }
-    }
-    
-    return errors
-}
-
-try {
-
-    let xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
-
-    parser.parseString(xml_string, function(error, result) {
-        if(error === null) {
-            if(result.checkstyle){
-                const report = result.checkstyle
-                if(report.file){
-                    let checkstyleFormattedComment = ""
-                    let errors = []
-                    if(Array.isArray(report.file)){
-                        for(let file of report.file){
-                            errors = errors.concat(getFormattedFileObject(file))
-                        }
-                    }
-                    else{
-                        errors = errors.concat(getFormattedFileObject(file))
-                    }
-
-
-                    checkstyleFormattedComment = getCommentFromErrors(errors)
-                    checkstyleFormattedComment += '\n'
-                    core.setOutput("checkstyle-comment", checkstyleFormattedComment);
-                }
-            }
-        }
-        else {
-            core.setFailed(error.message);
-        }
-    });
+try{
 
     // Designite file treatment
 
@@ -400,17 +319,16 @@ try {
         // Ttitle
         comment += '### Classes\n'
         // Header
-        comment += '| Class | FAN-IN | FAN-OUT | TCC | AIF | MIF | Public Attributes | MHF |\n'
+        comment += '| Class | FAN-IN | FAN-OUT | TCC | MIF | Public Attributes | MHF |\n'
         comment += ' | - | - | - | - | - | - | - | -  |\n'
         for(let currentClass of classes){
             comment += currentClass.location + ' | ' + 
                        currentClass.fanin + ' | ' + 
                        currentClass.fanout + ' | ' + 
-                       currentClass.tcc + ' | ' + 
-                       currentClass.AIF + ' | ' + 
-                       currentClass.MIF + ' | ' + 
+                       Number.isNaN(currentClass.tcc) ? 'Not enough methods' : roundNumber(currentClass.tcc) + ' | ' + 
+                       roundNumber(currentClass.MIF) + ' | ' + 
                        currentClass.PA + ' | ' + 
-                       currentClass.MHF + ' |\n' 
+                       roundNumber(currentClass.MHF) + ' |\n' 
         }
         return comment
     }
@@ -422,16 +340,16 @@ try {
         // Ttitle
         comment += '### Methods\n'
         // Header
-        comment += '| Class | Method | Total Line of Code | NOP | NBD | FAN-IN | FAN-OUT | McCabe Cyclomatic Complexity |\n'
+        comment += '| Class | Method | FAN-IN | FAN-OUT | Total Lines of Code | NOP | NBD | McCabe Cyclomatic Complexity |\n'
         comment += ' | - | - | - | - | - | - | - | -  |\n'
         for(let currentMethod of methods){
             comment += currentMethod.location + ' | ' + 
                        currentMethod.name + ' | ' + 
+                       currentMethod.FIN + ' | ' + 
+                       currentMethod.FOUT + ' | ' + 
                        currentMethod.TLOC + ' | ' + 
                        currentMethod.NOP + ' | ' + 
                        currentMethod.NBD + ' | ' + 
-                       currentMethod.FIN + ' | ' + 
-                       currentMethod.FOUT + ' | ' + 
                        currentMethod.CC + ' |\n' 
         }
         return comment
@@ -470,7 +388,6 @@ try {
    
         });
     }
-
     outputMetricComment(metricsXML, classMainFile)
 
 } catch (error) {
