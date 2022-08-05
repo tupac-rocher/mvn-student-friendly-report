@@ -1,82 +1,241 @@
-// Checkstyle file treatment
+const fs = require('fs');
+const xml2js = require('xml2js');
+const parser = new xml2js.Parser({ attrkey: "ATTR" });
 
-const getCommentFromErrors = (errors) => {
-    let errorsComment = ""
-    let errorNames = errors.map((error) => {
-        return error.errorType
+/**
+ * 
+ * @param {String} rawIssueName from the 'source' attribute of the 'error' object
+ * @returns {String} a formatted String from rawIssueName in order to get only the name, 
+ * ex: com.puppycrawl.tools.checkstyle.checks.naming.AbstractClassNameCheck 
+ * -> Abstract Class Name 
+ */
+const formatIssueName = (rawIssueName) => {
+    const issueName = 
+    rawIssueName.split('.')[6]
+        // add whitespaces
+        .replace(/([A-Z])/g, ' $1')
+        // uppercase the first character
+        .replace(/^./, function(str){ return str.toUpperCase(); })
+        // remove the ending 'Check'
+        .replace("Check", "")
+    return issueName
+}
+
+/**
+ * 
+ * @param {[Object]} issues an Array containing issues of type Object with the following data structure
+ * issues : [
+ *      name : String
+ *      locations : [
+ *          fileName: String
+ *          line: String
+ *          column: String
+ *          message: String   
+ *      ]
+ * ]
+ * @returns {String} A markdown formatted String representing the code quality comment section
+ */
+const generateCodeQualityComment = (issues) => {
+    let codeQualityComment = '## Code quality\n'
+    for(let issue of issues){
+        codeQualityComment +='\n\n### ' + issue.name + '\n'
+        for(let location of issue.locations){
+            codeQualityComment += '- ' + location.fileName + ' ('+ location.line + ':' + location.column + ')\n'
+            codeQualityComment += location.message + '\n'
+        }
+    }
+    return codeQualityComment
+}
+
+
+/**
+ * 
+ * @param {String} issueName
+ * @param {[Object]} fileObjectIssues 
+ * @returns {[Object]} a list of the location occurences (file information) of an issue
+ * [
+ *      fileName: String
+ *      line: String
+ *      column: String
+ *      message: String
+ * ]
+ */
+const getIssueLocations = (issueName, fileObjectIssues) => {
+    const filteredFileObjectIssues =  fileObjectIssues.filter((fileObjectIssue) => {
+        return fileObjectIssue.issueName === issueName
     })
-    errorNames = [... new Set(errorNames)]
-    for (let currentError of errorNames){
-        errorsComment += '\n\n### ' + currentError + '\n'
-        const currentErrors = errors.filter((error) => {
-            if(currentError === error.errorType){
-                errorsComment += '- ' + error.fileName + ' ('+ error.line + ':' + error.column + ')\n'
-                return error
+    return filteredFileObjectIssues.map((fileObjectIssue) => {
+        const { issueName, ...location} = fileObjectIssue
+        return location
+    })
+
+}
+
+/**
+ * 
+ * @param {[String]} reportedIssueSet a set of the reported issues
+ * @param {[Object]} fileObjectIssues a list of file object with the following structure
+ * [
+ *      issueName: String
+ *      fileName: String
+ *      line: String
+ *      column: String
+ *      message: String  
+ * ]
+ * @returns {[Object]} an Array containing issues of type Object with the following data structure
+ * issues : [
+ *      name : String
+ *      locations : [
+ *          fileName: String
+ *          line: String
+ *          column: String
+ *          message: String   
+ *      ]
+ * ]
+ */
+const getFormattedIssues = (reportedIssueSet, fileObjectIssues) => {
+    const issues = []
+    for(let issueName of reportedIssueSet){
+        const newIssue = {
+            name: issueName,
+            locations: getIssueLocations(issueName, fileObjectIssues)
+        }
+        issues.push(newIssue)
+
+    }
+    return issues
+}
+
+/**
+ * 
+ * @param {[Object]} fileObjectIssues an Array containing issues of type Object with the following data structure
+ * [
+ *      issueName: String
+ *      fileName: String
+ *      line: String
+ *      column: String
+ *      message: String  
+ * ]
+ * @returns {[String]} a set of the reported issues
+ */
+const getReportedIssueSet = (fileObjectIssues) => {
+    const issueNames =  fileObjectIssues.map((issue) => {
+        return issue.issueName
+    })
+    return [... new Set(issueNames)] 
+}
+
+/**
+ * 
+ * @param {String} rawName from the 'name' attribute of the 'file' object
+ * @returns {String} a formatted String from rawName in order to get the path of the file starting from the main/java folder
+ */
+const getFormattedFileName = (rawName) => {
+    return rawName.split('/java/')[1].replace(/\//g, ".")
+}
+
+/**
+ * 
+ * @param {[Object]} files an Array of Object with the following structure
+ * [
+ *      ATTR:{
+ *              name: String
+ *          }
+ *      error: [
+ *          ATTR:{
+ *              severity: String
+ *              column: String
+ *              message: String
+ *              source: String
+ *          }
+ *      ]
+ * ]
+ * @returns {[Object]}  an Array containing issues of type Object with the following data structure
+ * [
+ *      issueName: String
+ *      fileName: String
+ *      line: String
+ *      column: String
+ *      message: String  
+ * ]
+ */
+const getFileObjectIssues = (files) => {
+    console.log(files)
+    let issues = []
+    for(let file of files){
+        const fileName = getFormattedFileName(file.ATTR.name)
+        if(file.error){
+            console.log(file.error)
+            const issuesFromFile = file.error.map((err) => {
+                    return {
+                        issueName: formatIssueName(err.ATTR.source),
+                        fileName: fileName,
+                        line: err.ATTR.line? err.ATTR.line : '0',
+                        column: err.ATTR.column? err.ATTR.column : '0',
+                        message: err.ATTR.message
+                    }
+            })
+            issues = issues.concat(issuesFromFile)
+        }
+    }
+    return issues
+    
+}
+
+/**
+ * 
+ * @param {String} checkstyleResultXml the path to the corresponding file
+ * @returns {Promise} that resolves with an array of issues with the following structure
+ * issues : [
+ *      name : String
+ *      locations : [
+ *          fileName: String
+ *          line: String
+ *          column: String
+ *          message: String   
+ *      ]
+ * ]
+ */
+const getCodeQualityIssues = (checkstyleResultXml) => {
+    return new Promise((resolve, reject) => {
+        const xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
+        parser.parseString(xml_string, function(error, result) {
+            if(error !== null) {
+                reject(error)
+                return
             }
+            if(!result.checkstyle){
+                reject("object 'result' does not have a 'checkstyle' property")
+                return
+            }
+            const report = result.checkstyle
+            if(!report.file){
+                reject("object 'checkstyle' does not have a 'file' property")
+                return
+            }
+            const files = report.file
+            const fileObjectIssues = getFileObjectIssues(files)
+            const reportedIssueSet = getReportedIssueSet(fileObjectIssues)
+            resolve(getFormattedIssues(reportedIssueSet, fileObjectIssues))
+        });
+    })
+}
+
+/**
+ * 
+ * @param {String} checkstyleResultXml the path to the corresponding file
+ * @returns {Promise} that resolves with a Markdown formatted String corresponding to the code quality section
+ */
+const getCodeQualityComment = (checkstyleResultXml) => {
+    return new Promise((resolve, reject) => {
+        getCodeQualityIssues(checkstyleResultXml)
+        .then((issues) => {
+            resolve(generateCodeQualityComment(issues))
         })
-    }
-    return errorsComment
+        .catch((error) => {
+            reject(error)
+        })
+    })
 }
 
-const getFormattedFileObject = (file) => {
-    const errors = []
-
-    const fileName = file.ATTR.name.split('/java/')[1].replace(/\//g, ".")
-    if(file.error){
-        for (let error of file.error){
-            const attributes = error.ATTR
-    
-            const newErrorData = {}
-            newErrorData.fileName = fileName
-            newErrorData.line = attributes.line? attributes.line : '0'
-            newErrorData.column = attributes.column? attributes.column : '0'
-            const source = attributes.source.split('.')
-            const errorType = source[6]
-            // add whitespaces
-            .replace(/([A-Z])/g, ' $1')
-            // uppercase the first character
-            .replace(/^./, function(str){ return str.toUpperCase(); })
-            // remove the ending 'Check'
-            .replace("Check", "")
-            newErrorData.errorType = errorType
-            newErrorData.message = attributes.message
-            errors.push(newErrorData)
-        }
-    }
-    
-    return errors
-}
-
-
-
-    let xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
-
-    parser.parseString(xml_string, function(error, result) {
-        if(error === null) {
-            if(result.checkstyle){
-                const report = result.checkstyle
-                if(report.file){
-                    let checkstyleFormattedComment = ""
-                    let errors = []
-                    if(Array.isArray(report.file)){
-                        for(let file of report.file){
-                            errors = errors.concat(getFormattedFileObject(file))
-                        }
-                    }
-                    else{
-                        errors = errors.concat(getFormattedFileObject(file))
-                    }
-
-
-                    checkstyleFormattedComment = getCommentFromErrors(errors)
-                    checkstyleFormattedComment += '\n'
-                    core.setOutput("checkstyle-comment", checkstyleFormattedComment);
-                }
-            }
-        }
-        else {
-            core.setFailed(error.message);
-        }
-    });
-
-    module.exports = { getCodeQualityComment };
+module.exports = { getCodeQualityComment };
