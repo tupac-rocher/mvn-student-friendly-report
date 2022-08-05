@@ -3,8 +3,8 @@ const HTMLParser = require('node-html-parser');
 
 /**
  * 
- * @param testCoveragePercentage 
- * @returns A markdown formatted String representing the test coverage comment section
+ * @param {String} testCoveragePercentage contains the percentage of test coverage
+ * @returns {String} A markdown formatted String representing the test coverage comment section
  */
 const generateTestCoverageComment = (testCoveragePercentage) => {
     const testCoverageComment = 
@@ -14,8 +14,8 @@ const generateTestCoverageComment = (testCoveragePercentage) => {
 
 /**
  * 
- * @param jacocoHtmlReport 
- * @returns A Promise that resolves a String corresponding to the test coverage percentage (ex: '50 %')
+ * @param {String} jacocoHtmlReport the path to the corresponding file
+ * @returns {Promise} A Promise that resolves a String corresponding to the test coverage percentage (ex: '50 %')
  */
 const getTestCoveragePercentage = (jacocoHtmlReport) => {
     return new Promise( function(resolve, reject){
@@ -37,8 +37,8 @@ const getTestCoveragePercentage = (jacocoHtmlReport) => {
 
 /**
  * 
- * @param jacocoHtmlReport 
- * @returns A Promise that resolves a Markdown formatted String representing the test coverage comment section
+ * @param {String} jacocoHtmlReport the path to the corresponding file
+ * @returns {Promise} A Promise that resolves a Markdown formatted String representing the test coverage comment section
  */
 const getTestCoverageComment = (jacocoHtmlReport) => {
     return new Promise(function(resolve, reject){
