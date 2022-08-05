@@ -1,0 +1,49 @@
+const fs = require('fs');
+const HTMLParser = require('node-html-parser');
+
+const generateTestCoverageComment = (testCoveragePercentage) => {
+    const testCoverageComment = `
+        ## Test Coverage\n
+        | Total coverage | ${ testCoveragePercentage } |\
+        |:-|:-:|\'
+
+    `
+    return testCoverageComment
+}
+
+const getTestCoveragePercentage = (jacocoHtmlReport) => {
+    return new Promise( function(resolve, reject){
+        console.log("up until now everything is fine" + jacocoHtmlReport)
+        fs.readFile(jacocoHtmlReport, 'utf8', function(err, html){
+            console.log("TESTESTSETSE")
+            if(err === null) { 
+                /**
+                 * Reading the html in order to get the test coverage percentage
+                 */
+                const root = HTMLParser.parse(html)
+                const testCoveragePercentage = root.querySelector('#c0').childNodes[0]._rawText
+                resolve(testCoveragePercentage);
+            }
+            else {
+                console.log("ERROR")
+                reject(error.message);
+            } 
+        })
+    })
+}
+
+
+const getTestCoverageComment = (jacocoHtmlReport) => {
+    return new Promise(function(resolve, reject){
+        getTestCoveragePercentage(jacocoHtmlReport)
+        .then((testCoveragePercentage) => {
+            console.log(testCoveragePercentage)
+            resolve(generateTestCoverageComment(testCoveragePercentage))
+        })
+        .catch((error) =>{
+            reject(error.message)
+        })
+    })    
+}
+
+module.exports = { getTestCoverageComment };
