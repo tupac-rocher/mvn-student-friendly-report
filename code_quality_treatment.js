@@ -160,12 +160,10 @@ const getFormattedFileName = (rawName) => {
  * ]
  */
 const getFileObjectIssues = (files) => {
-    console.log(files)
     let issues = []
     for(let file of files){
         const fileName = getFormattedFileName(file.ATTR.name)
         if(file.error){
-            console.log(file.error)
             const issuesFromFile = file.error.map((err) => {
                     return {
                         issueName: formatIssueName(err.ATTR.source),

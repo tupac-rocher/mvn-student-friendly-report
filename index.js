@@ -8,6 +8,8 @@ const parser = new xml2js.Parser({ attrkey: "ATTR" });
 const HTMLParser = require('node-html-parser');
 
 const test_coverage_treatment = require('./test_coverage_treatment')
+const code_quality_treatment = require('./code_quality_treatment')
+const code_smell_treatment = require('./code_smell_treatment')
 
 //Inputs
 
@@ -31,131 +33,17 @@ const roundNumber = (number) => {
 }
 
 Promise.all([
-    test_coverage_treatment.getTestCoverageComment(jacocoHtmlReport)
+    test_coverage_treatment.getTestCoverageComment(jacocoHtmlReport),
+    code_quality_treatment.getCodeQualityComment(checkstyleResultXml),
+    code_smell_treatment.getCodeSmellComment(designiteDesignCSCsv,designiteImplementationCSCsv)
 ]).then((data) => {
     console.log(data[0])
+    console.log(data[1])
+    console.log(data[2])
+}).catch((error) => {
+    core.setFailed(error.message);
 })
 try{
-
-    // Designite file treatment
-
-    // Returns the design Code smells restructured from Designite out of a Promise
-    const getDesignCodeSmells = (data) => {
-        const codeSmells = []
-
-        // List of design code smells reported
-        let codeSmellsReported = [... new Set(data.map((result) => result['Code Smell']))]
-
-        for(let codeSmell of codeSmellsReported){
-            const newCodeSmell = {
-                name: codeSmell,
-                files: []
-            }
-            for(let result of data){
-                if(result['Code Smell'] === codeSmell){
-                    newCodeSmell.files.push(result['Package Name'] + '.' + result['Type Name'])
-                }
-            }
-            codeSmells.push(newCodeSmell)
-            
-        }
-        return codeSmells
-    }
-
-    // Returns the design Code smells restructured from Designite out of a Promise
-    const designCodeSmellsFormat = (file) => {
-        return new Promise(function(resolve, reject){
-            const results = []
-            fs.createReadStream(file)
-                .pipe(csv({}))
-                .on('error', function(error){
-                    reject(error)
-                })
-                .on('data', (data) => results.push(data))
-                .on('end', () => {
-                    const dataFormatted = getDesignCodeSmells(results)
-                    resolve(dataFormatted);
-            })
-        });
-    }
-
-
-    // Returns the implementation Code smells restructured from Designite out of a Promise
-    const getImplementationCodeSmells = (data) => {
-        const codeSmells = []
-
-        // List of design code smells reported
-        let codeSmellsReported = [... new Set(data.map((result) => result['Code Smell']))]
-
-        for(let codeSmell of codeSmellsReported){
-            const newCodeSmell = {
-                name: codeSmell,
-                files: []
-            }
-            for(let result of data){
-                if(result['Code Smell'] === codeSmell){
-                    newCodeSmell.files.push(result['Package Name'] + '.' + result['Type Name'] + '.' + result['Method Name'])
-                }
-            }
-            codeSmells.push(newCodeSmell)
-            
-        }
-        return codeSmells
-    }
-
-    // Returns the implementation Code smells restructured from Designite out of a Promise
-    const implementationCodeSmellsFormat = (file) => {
-        return new Promise(function(resolve, reject){
-            const results = []
-            fs.createReadStream(file)
-                .pipe(csv({}))
-                .on('error', function(error){
-                    reject(error)
-                })
-                .on('data', (data) => results.push(data))
-                .on('end', () => {
-                    const dataFormatted = getImplementationCodeSmells(results)
-                    resolve(dataFormatted);
-            })
-        });
-    }
-
-    const outputDesigniteComment = (designCodeSmellsFile, implementationCodeSmells) => {
-        Promise.all(
-            [
-                designCodeSmellsFormat(designCodeSmellsFile),
-                implementationCodeSmellsFormat(implementationCodeSmells)
-            ]
-        ).then( function (data) {
-            let comment = ""
-            if(data[0].length !== 0){
-                comment += "### Design\n"
-                for(let codeSmell of data[0]){
-                    comment += "#### " + codeSmell.name + "\n"
-                    if(codeSmell.files){
-                        for(let file of codeSmell.files){
-                            comment += " - " + file + "\n"
-                        }
-                    } 
-                }
-            }
-            if(data[1].length !== 0){
-                comment += "### Implementation\n"
-                for(let codeSmell of data[1]){
-                    comment += "#### " + codeSmell.name + "\n"
-                    if(codeSmell.files){
-                        for(let file of codeSmell.files){
-                            comment += " - " + file + "\n"
-                        }
-                    } 
-                }
-            }
-
-            core.setOutput("code-smells-comment", comment);
-        });
-    }
-
-    outputDesigniteComment(designiteDesignResultCsv,designiteImplementationResultCsv)
 
     // Metrics treatment
 
