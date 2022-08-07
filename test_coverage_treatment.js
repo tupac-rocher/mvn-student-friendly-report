@@ -37,7 +37,7 @@ const getTestCoveragePercentage = (jacocoHtmlReport) => {
 
 /**
  * 
- * @param {String} jacocoHtmlReport the path to the corresponding file
+ * @param {String} jacocoHtmlReport the path to the corresponding HTML file
  * @returns {Promise} A Promise that resolves a Markdown formatted String representing the test coverage comment section
  */
 const getTestCoverageComment = (jacocoHtmlReport) => {
