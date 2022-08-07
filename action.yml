@@ -29,14 +29,8 @@ inputs:
     required: true
     default: 'implementationCodeSmells.csv'
 outputs:
-  test-coverage-comment: 
-    description: 'A String that contains the total percentage of test coverage'
-  metrics-comment:
-    description: 'A String that contains all the information about the selected metrics (Class-level and Method-level)'
-  checkstyle-comment:
-    description: 'A String that contains all the information from the checkstyle analysis'
-  code-smells-comment:
-    description: 'A String that contains all the code smells from the designite analysis'
+  report-comment:
+    description: 'A Markdown formatted String that contains the whole report information'
 runs:
   using: 'node16'
   main: 'index.js'
