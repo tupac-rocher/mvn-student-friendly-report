@@ -36,7 +36,7 @@ const run = () => {
         test_coverage_treatment.getTestCoverageComment(jacocoHtmlReport),
         metric_treatment.getMetricComment(classMainFile, metricsXML),
         code_quality_treatment.getCodeQualityComment(checkstyleResultXml),
-        code_smell_treatment.getCodeSmellComment(designiteDesignCSCsv,designiteImplementationCSCsv)
+        code_smell_treatment.getCodeSmellComment(designiteDesignResultCsv,designiteImplementationResultCsv)
     
     ]).then((data) => {
         const  report = '# Report\n' +
