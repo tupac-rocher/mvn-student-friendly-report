@@ -5,17 +5,17 @@ const csv = require('csv-parser')
 /**
  * 
  * @param {[Object]} data containing the design code smells with the following data structure (raw from the file)
- * [
+ * {
  *      'Project Name' : String
  *      'Package Name': String
  *      'Type Name': String
  *      'Code Smell': String
- * ] 
+ * }
  * @returns {[Object]} containing the restructured code smell objects with the following structure
- * [
+ * {
  *      name: String
  *      files: [String]
- * ]
+ * }
  */
 const getDesignCodeSmells = (data) => {
     const codeSmells = []
@@ -41,12 +41,12 @@ const getDesignCodeSmells = (data) => {
 
 /**
  * 
- * @param {String} file the path to the file containing the result of the design code smell analysis
+ * @param {String} file the path to the CSV file containing the result of the design code smell analysis from Designite
  * @returns {Promise} A Promise that resolves with an array of design code smells having the following data structure
- * [
+ * {
  *      name: String
  *      files: [String]
- * ]
+ * }
  * 
  */
 const designCodeSmellFormat = (file) => {
@@ -69,17 +69,17 @@ const designCodeSmellFormat = (file) => {
 /**
  * 
  * @param {[Object]} data containing the implementation code smells with the following data structure (raw from the file)
- * [
+ * {
  *      'Project Name' : String
  *      'Package Name': String
  *      'Type Name': String
  *      'Code Smell': String
- * ] 
+ * }
  * @returns {[Object]} containing the restructured code smell objects with the following structure
- * [
+ * {
  *      name: String
  *      files: [String]
- * ]
+ * }
  */
 const getImplementationCodeSmells = (data) => {
     const codeSmells = []
@@ -105,12 +105,12 @@ const getImplementationCodeSmells = (data) => {
 
 /**
  * 
- * @param {String} file the path to the file containing the result of the implementation code smell analysis
+ * @param {String} file the path to the CSV file containing the result of the implementation code smell analysis from Designite
  * @returns {Promise} A Promise that resolves with an array of implementation code smells having the following data structure
- * [
+ * {
  *      name: String
  *      files: [String]
- * ]
+ * }
  * 
  */
 const implementationCodeSmellFormat = (file) => {
@@ -133,10 +133,10 @@ const implementationCodeSmellFormat = (file) => {
  * 
  * @param {String} title of the sub-section
  * @param {[Object]} data a list of code smells having the following structure
- * [
+ * {
  *      name: String
  *      files: [String]
- * ]
+ * }
  * @returns {String} a Markdown formatted String containing the sub section of the code smells section
  */
 const generateSubSectionComment = (title, data) => {
@@ -159,15 +159,15 @@ const generateSubSectionComment = (title, data) => {
 /**
  * 
  * @param {[Object]} designCodeSmells  a list of code smells having the following structure
- * [
+ * {
  *      name: String
  *      files: [String]
- * ]
+ * }
  * @param {[Object]} implementationCodeSmells  a list of code smells having the following structure
- * [
+ * {
  *      name: String
  *      files: [String]
- * ]
+ * }
  * @returns {String} A Markdown formatted String containing the code smell section
  */
 const generateCodeSmellComment = (designCodeSmells, implementationCodeSmells) => {
@@ -179,8 +179,8 @@ const generateCodeSmellComment = (designCodeSmells, implementationCodeSmells) =>
 
 /**
  * 
- * @param {String} designCodeSmellsFile the path to the corresponding file
- * @param {String} implementationCodeSmellFile the path to the corresponding file
+ * @param {String} designCodeSmellsFile the path to the corresponding CSV file
+ * @param {String} implementationCodeSmellFile the path to the corresponding CSV file
  * @returns {Promise} that resolves with a Markdown formatted String corresponding to the code smell section
  */
 const getCodeSmellComment = (designCodeSmellFile, implementationCodeSmellFile) => {

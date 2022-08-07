@@ -24,15 +24,17 @@ const formatIssueName = (rawIssueName) => {
 /**
  * 
  * @param {[Object]} issues an Array containing issues of type Object with the following data structure
- * issues : [
+ * {
  *      name : String
  *      locations : [
- *          fileName: String
- *          line: String
- *          column: String
- *          message: String   
+ *          {
+ *              fileName: String
+ *              line: String
+ *              column: String
+ *              message: String  
+ *          } 
  *      ]
- * ]
+ * }
  * @returns {String} A markdown formatted String representing the code quality comment section
  */
 const generateCodeQualityComment = (issues) => {
@@ -52,13 +54,13 @@ const generateCodeQualityComment = (issues) => {
  * 
  * @param {String} issueName
  * @param {[Object]} fileObjectIssues 
- * @returns {[Object]} a list of the location occurences (file information) of an issue
- * [
+ * @returns {[Object]} a list of Object corresponding to the location occurences (file information) of an issue
+ * {
  *      fileName: String
  *      line: String
  *      column: String
  *      message: String
- * ]
+ * }
  */
 const getIssueLocations = (issueName, fileObjectIssues) => {
     const filteredFileObjectIssues =  fileObjectIssues.filter((fileObjectIssue) => {
@@ -74,24 +76,26 @@ const getIssueLocations = (issueName, fileObjectIssues) => {
 /**
  * 
  * @param {[String]} reportedIssueSet a set of the reported issues
- * @param {[Object]} fileObjectIssues a list of file object with the following structure
- * [
+ * @param {[Object]} fileObjectIssues a list of file Object with the following structure
+ * {
  *      issueName: String
  *      fileName: String
  *      line: String
  *      column: String
  *      message: String  
- * ]
+ * }
  * @returns {[Object]} an Array containing issues of type Object with the following data structure
- * issues : [
+ * {
  *      name : String
  *      locations : [
- *          fileName: String
- *          line: String
- *          column: String
- *          message: String   
+ *          {
+ *              fileName: String
+ *              line: String
+ *              column: String
+ *              message: String  
+ *          } 
  *      ]
- * ]
+ * }
  */
 const getFormattedIssues = (reportedIssueSet, fileObjectIssues) => {
     const issues = []
@@ -109,13 +113,13 @@ const getFormattedIssues = (reportedIssueSet, fileObjectIssues) => {
 /**
  * 
  * @param {[Object]} fileObjectIssues an Array containing issues of type Object with the following data structure
- * [
+ * {
  *      issueName: String
  *      fileName: String
  *      line: String
  *      column: String
  *      message: String  
- * ]
+ * }
  * @returns {[String]} a set of the reported issues
  */
 const getReportedIssueSet = (fileObjectIssues) => {
@@ -137,7 +141,7 @@ const getFormattedFileName = (rawName) => {
 /**
  * 
  * @param {[Object]} files an Array of Object with the following structure
- * [
+ * {
  *      ATTR:{
  *              name: String
  *          }
@@ -149,15 +153,15 @@ const getFormattedFileName = (rawName) => {
  *              source: String
  *          }
  *      ]
- * ]
+ * }
  * @returns {[Object]}  an Array containing issues of type Object with the following data structure
- * [
+ * {
  *      issueName: String
  *      fileName: String
  *      line: String
  *      column: String
  *      message: String  
- * ]
+ * }
  */
 const getFileObjectIssues = (files) => {
     let issues = []
@@ -182,17 +186,19 @@ const getFileObjectIssues = (files) => {
 
 /**
  * 
- * @param {String} checkstyleResultXml the path to the corresponding file
- * @returns {Promise} that resolves with an array of issues with the following structure
- * issues : [
+ * @param {String} checkstyleResultXml the path to the corresponding XML file
+ * @returns {Promise} that resolves with an array of Object with the following structure
+ * {
  *      name : String
  *      locations : [
- *          fileName: String
- *          line: String
- *          column: String
- *          message: String   
+ *          {
+ *              fileName: String
+ *              line: String
+ *              column: String
+ *              message: String  
+ *          } 
  *      ]
- * ]
+ * }
  */
 const getCodeQualityIssues = (checkstyleResultXml) => {
     return new Promise((resolve, reject) => {
@@ -221,7 +227,7 @@ const getCodeQualityIssues = (checkstyleResultXml) => {
 
 /**
  * 
- * @param {String} checkstyleResultXml the path to the corresponding file
+ * @param {String} checkstyleResultXml the path to the corresponding XML file
  * @returns {Promise} that resolves with a Markdown formatted String corresponding to the code quality section
  */
 const getCodeQualityComment = (checkstyleResultXml) => {
