@@ -79,7 +79,7 @@ This job is the core of the pipeline. It will execute the Maven goals of the Mav
 
 It will download the Designite exectuable artifact and execute it against the project to generate the analytic files.
 
-Regarding the metrics, to use CK it will clone its repository, since it is a Maven project it will install it, and finally execute its goal on the current project, this process is due to the way depicted by the CK README file to use the tool, eventually the analytic files are generated. 
+Regarding the metrics, to use CK it will clone its repository, since it is a Maven project it will install it, and finally execute its goal on the current project, this process is due to the way described by the CK README file to use the tool, eventually the analytic files are generated. 
 To use the JaSoMe tool, the process is to download the release, unzip it and execute it against the project to generate the analytic files.
 
 Now that all the files have been generated. The action corresponding to this repository will be used to aggregate and format the information into a single output that will represent a report in a Markdown formatted String variable.
