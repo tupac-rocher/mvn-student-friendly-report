@@ -71,7 +71,7 @@ The purpose of this job is to test the Maven project to let the user know if the
 The purpose of this job is to upload the designite jar to execute the tool in the last job
 
 ### report
-**actions used**: actions/checkout@v3, actions/setup-java@v3, actions/download-artifact@v3, robinraju/release-downloader@v1.4, montudor/action-zip@v1, tupac-rocher/mvn-format-xml-reports@v2.1, thollander/actions-comment-pull-request@v1
+**actions used**: actions/checkout@v3, actions/setup-java@v3, actions/download-artifact@v3, robinraju/release-downloader@v1.4, montudor/action-zip@v1, tupac-rocher/mvn-student-friendly-report@v2.1, thollander/actions-comment-pull-request@v1
 
 **description**: 
 
