@@ -34,7 +34,7 @@ You can use it in your Github Actions workflow.
 Once you executed the goal of each plugin.
 
 ```yaml
-      uses: tupac-rocher/mvn-format-xml-reports@v2.1
+      uses: tupac-rocher/mvn-student-friendly-report@v2.1
       with:
         jacoco-html-report: ${{ github.workspace }}/target/site/jacoco/index.html
         ck-main-class-csv: ${{ github.workspace }}/src/main/java/class.csv
