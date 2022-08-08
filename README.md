@@ -44,4 +44,24 @@ Once you executed the goal of each plugin.
         designite-implementation-result-csv: ${{ github.workspace }}/target/designite/implementationCodeSmells.csv
 ```
 
-## Pipeline explanation and usage context
+## Student-friendly pipeline explanation and context of use
+[Report Documentation](https://github.com/tupac-rocher/student-friendly-pipeline-documentation)
+
+Your project should include 2 Maven plugins in your pom.xml file:
+- jacoco-maven-plugin
+- maven-checkstyle-plugin
+
+The pipeline is divided into 3 jobs:
+- test
+- upload-designite-artifact
+- report
+
+### test
+actions used: actions/checkout@v3, actions/setup-java@v3
+
+
+### upload-designite-artifact
+actions used: GuillaumeFalourd/clone-github-repo-action@v2, actions/upload-artifact@v3
+
+### report
+actions used: actions/checkout@v3, actions/setup-java@v3, actions/download-artifact@v3, robinraju/release-downloader@v1.4, montudor/action-zip@v1, tupac-rocher/mvn-format-xml-reports@v2.1, thollander/actions-comment-pull-request@v1
