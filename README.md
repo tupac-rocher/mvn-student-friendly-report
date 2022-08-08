@@ -49,7 +49,7 @@ Once you executed the goal of each plugin.
 
 Your project should include 2 Maven plugins in the build tag of the pom.xml file:
 - jacoco-maven-plugin (verion: 0.8.7, group-id: org.jacoco)
-- maven-checkstyle-plugin (version 3.1.2, group-id: org.apache.maven.plugins)
+- maven-checkstyle-plugin (version: 3.1.2, group-id: org.apache.maven.plugins)
 
 The pipeline is divided into 3 jobs:
 - test
