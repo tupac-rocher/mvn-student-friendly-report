@@ -29,7 +29,7 @@ const getTestCoveragePercentage = (jacocoHtmlReport) => {
                 resolve(testCoveragePercentage);
             }
             else {
-                reject(error.message);
+                reject(err);
             } 
         })
     })
