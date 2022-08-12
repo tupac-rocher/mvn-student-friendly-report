@@ -1,5 +1,0 @@
-Project Name,Package Name,Type Name,Code Smell
-main,com.montpellier,Computer,Unutilized Abstraction
-main,com.montpellier,Computer,Broken Hierarchy
-main,com.montpellier,Device,Unutilized Abstraction
-main,com.montpellier,Office,Unutilized Abstraction

@@ -1,3 +1,0 @@
-Project Name,Package Name,Type Name,Method Name,Code Smell
-main,com.montpellier,Device,emptyLoop,Empty catch clause
-main,com.montpellier,Device,emptyLoop,Magic Number
