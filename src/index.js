@@ -1,12 +1,6 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
 
-const xml2js = require('xml2js');
-const fs = require('fs');
-const csv = require('csv-parser')
-const parser = new xml2js.Parser({ attrkey: "ATTR" });
-const HTMLParser = require('node-html-parser');
-
 const test_coverage_treatment = require('./test_coverage_treatment')
 const metric_treatment = require('./metric_treatment')
 const code_quality_treatment = require('./code_quality_treatment')
