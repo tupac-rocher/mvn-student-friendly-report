@@ -34,16 +34,16 @@ You can use it in your Github Actions workflow.
 Once you executed the goal of each plugin.
 
 ```yaml
-      uses: tupac-rocher/mvn-student-friendly-report@v2.1
+      uses: tupac-rocher/mvn-student-friendly-report@v2.2
       with:
-        jacoco-html-report: ${{ github.workspace }}/target/site/jacoco/index.html
-        ck-main-class-csv: ${{ github.workspace }}/src/main/java/class.csv
-        metrics-xml: ${{ github.workspace }}/metrics.xml
-        checkstyle-result-xml: ${{ github.workspace }}/target/checkstyle-result.xml
-        designite-design-result-csv: ${{ github.workspace }}/target/designite/designCodeSmells.csv
-        designite-implementation-result-csv: ${{ github.workspace }}/target/designite/implementationCodeSmells.csv
+            jacoco-html-report: ${{ github.workspace }}/target/site/jacoco/index.html
+            ck-main-class-csv: ${{ github.workspace }}/src/main/java/class.csv
+            metrics-xml: ${{ github.workspace }}/metrics.xml
+            checkstyle-result-xml: ${{ github.workspace }}/target/checkstyle-result.xml
+            designite-design-result-csv: ${{ github.workspace }}/target/designite/designCodeSmells.csv
+            designite-implementation-result-csv: ${{ github.workspace }}/target/designite/implementationCodeSmells.csv
 ```
-
+---
 ## Student-friendly pipeline explanation and context of use
 [Report Documentation](https://github.com/tupac-rocher/student-friendly-pipeline-documentation)
 
@@ -52,26 +52,30 @@ Your project should include 2 Maven plugins in the build tag of the pom.xml file
 - maven-checkstyle-plugin (version: 3.1.2, group-id: org.apache.maven.plugins)
 
 The pipeline is divided into 3 jobs:
-- test
+- build
 - upload-designite-artifact
 - report
 
-### test
+---
+### **build**
 **actions used**: actions/checkout@v3, actions/setup-java@v3
 
 **description**: 
 
-The purpose of this job is to test the Maven project to let the user know if the test validation passes before doing the other jobs
+ 
+The purpose of this job is to allow the user to know directly if the code builds, tests pass and a package can be created before doing the other jobs.
 
-### upload-designite-artifact
+---
+### **upload-designite-artifact**
 **actions used**: GuillaumeFalourd/clone-github-repo-action@v2, actions/upload-artifact@v3
 
 **description**:
 
 The purpose of this job is to upload the designite jar to execute the tool in the last job
 
-### report
-**actions used**: actions/checkout@v3, actions/setup-java@v3, actions/download-artifact@v3, robinraju/release-downloader@v1.4, montudor/action-zip@v1, tupac-rocher/mvn-student-friendly-report@v2.1, thollander/actions-comment-pull-request@v1
+---
+### **report**
+**actions used**: actions/checkout@v3, actions/setup-java@v3, actions/download-artifact@v3, robinraju/release-downloader@v1.4, montudor/action-zip@v1, tupac-rocher/mvn-student-friendly-report@v2.2, thollander/actions-comment-pull-request@v1
 
 **description**: 
 
