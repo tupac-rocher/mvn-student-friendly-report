@@ -93,7 +93,7 @@ checkstyle.xml is the configuration file that describes the issues to report. Yo
 
 ---
 
-Here is the explanation the the report.yml file that you can download [here](https://github.com/tupac-rocher/student-friendly-pipeline-documentation)
+Here is the explanation of the report.yml file that you can download [here](https://github.com/tupac-rocher/student-friendly-pipeline-documentation)
 
 The pipeline is divided into 3 jobs:
 - build
