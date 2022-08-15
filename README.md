@@ -49,7 +49,49 @@ Once you executed the goal of each plugin.
 
 Your project should include 2 Maven plugins in the build tag of the pom.xml file:
 - jacoco-maven-plugin (verion: 0.8.7, group-id: org.jacoco)
+```xml
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.7</version>
+    <executions>
+        <execution>
+            <id>prepare-agent</id>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+The first goal, "prepare-agent", will prepare the JaCoCo runtime agent to record the execution data.<br>
+The second goal, "report", will use the execution data recorded to generate code coverage reports.<br>
+This second goal is tied to the "test" phase of the Maven lifecycle, this means that the goal will be trigger of the compilation of this phase.<br>
+The test coverage report can be found at target/site/jacoco/index.html.
+
 - maven-checkstyle-plugin (version: 3.1.2, group-id: org.apache.maven.plugins)
+
+```xml
+<plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-checkstyle-plugin</artifactId>
+      <version>3.1.2</version>
+      <configuration>
+        <configLocation>checkstyle.xml</configLocation>
+        <encoding>UTF-8</encoding>
+      </configuration>
+</plugin>
+```
+checkstyle.xml is the configuration file that describes the issues to report. You can download it [here](https://github.com/tupac-rocher/student-friendly-pipeline-documentation)
+
+---
 
 The pipeline is divided into 3 jobs:
 - build
