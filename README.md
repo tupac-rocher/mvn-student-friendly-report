@@ -50,8 +50,9 @@ This action is used as a part of a workflow implemented on Maven projects. You c
 
 The purpose of the workflow is to give feedback to students about the code quality of their projects once they are submitting a pull request.
 
-The explanation of the feedback report can be seen [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#feedback-report). 
-[Google](https://google.com" target="_blank)
+If you want to implement this workflow check the usage [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#usage) in the usage section.
 
-If you want to implement this workflow check the usage [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#usage).
+The explanation of the feedback report can be seen [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#feedback-report) in the feedback report section.
+
+
 
