@@ -53,6 +53,3 @@ The purpose of the workflow is to give feedback to students about the code quali
 If you want to implement this workflow check the usage [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#usage) in the usage section.
 
 The explanation of the feedback report can be seen [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#feedback-report) in the feedback report section.
-
-Test link [here](https://github.com/tupac-rocher/student-friendly-pipeline-example/blob/master/README.md#feedback-report)
-
