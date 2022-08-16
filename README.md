@@ -46,7 +46,11 @@ Once you executed the goal of each plugin.
 ---
 ## Student-friendly pipeline explanation and context of use
 
-This action is used as a part of a workflow implemented on Maven projects. You can look at an example of this workflow in use here.
+This action is used as a part of a workflow implemented on Maven projects. You can look at an example of this workflow in use [here](https://github.com/tupac-rocher/student-friendly-pipeline-example).
+
 The purpose of the workflow is to give feedback to students about the code quality of their projects once they are submitting a pull request.
-The explanation of the feedback report can be seen here. If you want to implement this workflow check the usage here.
+
+The explanation of the feedback report can be seen [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#feedback-report). 
+
+If you want to implement this workflow check the usage [here](https://github.com/tupac-rocher/student-friendly-pipeline-example#usage).
 
