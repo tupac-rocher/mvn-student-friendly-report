@@ -34,7 +34,7 @@ const run = () => {
     
     ]).then((data) => {
         const  report = '# Report\n' +
-        '[Documentation](https://github.com/tupac-rocher/student-friendly-pipeline-documentation)\n'+
+        '[Documentation](https://github.com/tupac-rocher/student-friendly-pipeline-example#feedback-report)\n'+
         data[0] + 
         data[1] +
         data[2] +
