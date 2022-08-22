@@ -8,13 +8,6 @@ const code_smell_treatment = require('./code_smell_treatment')
 
 //Inputs
 
-// const jacocoHtmlReport = 'target/site/jacoco/index.html'
-// const classMainFile = './main/class.csv'
-// const metricsXML = "metrics.xml"
-// const checkstyleResultXml = 'checkstyle-result-2.xml'
-// const designiteDesignCSCsv = "designCodeSmells-2.csv"
-// const designiteImplementationCSCsv = "implementationCodeSmells.csv"
-
 const jacocoHtmlReport = core.getInput('jacoco-html-report')
 const classMainFile = core.getInput('ck-main-class-csv')
 const metricsXML = core.getInput('metrics-xml')
