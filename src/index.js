@@ -2,7 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 
 const test_coverage_treatment = require('./test_coverage_treatment')
-const metric_treatment = require('./metric_treatment')
+const design_metric_treatment = require('./design_metric_treatment')
 const code_quality_treatment = require('./code_quality_treatment')
 const code_smell_treatment = require('./code_smell_treatment')
 
@@ -21,7 +21,7 @@ const designiteImplementationResultCsv = core.getInput('designite-implementation
 const run = () => {
     Promise.all([
         test_coverage_treatment.getTestCoverageComment(jacocoHtmlReport),
-        metric_treatment.getMetricComment(classMainFile, metricsXML),
+        design_metric_treatment.getDesignMetricComment(classMainFile, metricsXML),
         code_quality_treatment.getCodeQualityComment(checkstyleResultXml),
         code_smell_treatment.getCodeSmellComment(designiteDesignResultCsv,designiteImplementationResultCsv)
     

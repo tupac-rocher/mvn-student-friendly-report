@@ -293,7 +293,7 @@ const ckMainClassDataFormat = (ckMainClassFile) => {
  *      MHF: Number
  * }
  * @returns a Markdown formatted String that represents the class-level section 
- * from the metric section of the report
+ * from the design metric section of the report
  */
 const getClassMetricsComment = (classes) => {
     let comment = ''
@@ -329,7 +329,7 @@ const getClassMetricsComment = (classes) => {
  *      CC: Number
  * }
  * @returns {String} a Markdown formatted String that represents the method-level section 
- * from the metric section of the report
+ * from the design metric section of the report
  */
 const getMethodMetricsComment = (methods) => {
     let comment = ''
@@ -383,9 +383,9 @@ const getMergedData = (ckData, jasomeData) => {
  * 
  * @param {String} ckMainFile the path to the corresponding file
  * @param {String} metricsXMLFile the path to the corresponding file
- * @returns {Promise} that resolves with a Markdown formatted String that represents the metric section of the report
+ * @returns {Promise} that resolves with a Markdown formatted String that represents the design metric section of the report
  */
-const getMetricComment = (ckMainFile, metricsXMLFile) => {
+const getDesignMetricComment = (ckMainFile, metricsXMLFile) => {
     return new Promise((resolve, reject) => {
         // wait until all formatted data have been retrieved, then continue
         Promise.all(
@@ -404,7 +404,7 @@ const getMetricComment = (ckMainFile, metricsXMLFile) => {
                 const classMetricsComment = getClassMetricsComment(classes)
                 const methodMetricsComment = getMethodMetricsComment(jasomeData.methods)
                 
-                const metricsFormattedComment = '## Metrics\n' + classMetricsComment + methodMetricsComment
+                const metricsFormattedComment = '## Design Metrics\n' + classMetricsComment + methodMetricsComment
                 resolve(metricsFormattedComment)
         })
         .catch((error) => {
@@ -413,4 +413,4 @@ const getMetricComment = (ckMainFile, metricsXMLFile) => {
     })
 }
 
-module.exports = { getMetricComment }
+module.exports = { getDesignMetricComment }
