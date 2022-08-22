@@ -3,7 +3,7 @@ const github = require('@actions/github');
 
 const test_coverage_treatment = require('./test_coverage_treatment')
 const design_metric_treatment = require('./design_metric_treatment')
-const code_quality_treatment = require('./code_quality_treatment')
+const code_style_treatment = require('./code_style_treatment')
 const code_smell_treatment = require('./code_smell_treatment')
 
 //Inputs
@@ -22,7 +22,7 @@ const run = () => {
     Promise.all([
         test_coverage_treatment.getTestCoverageComment(jacocoHtmlReport),
         design_metric_treatment.getDesignMetricComment(classMainFile, metricsXML),
-        code_quality_treatment.getCodeQualityComment(checkstyleResultXml),
+        code_style_treatment.getCodeStyleComment(checkstyleResultXml),
         code_smell_treatment.getCodeSmellComment(designiteDesignResultCsv,designiteImplementationResultCsv)
     
     ]).then((data) => {

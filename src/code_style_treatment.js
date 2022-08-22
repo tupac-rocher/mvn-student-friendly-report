@@ -35,18 +35,18 @@ const formatIssueName = (rawIssueName) => {
  *          } 
  *      ]
  * }
- * @returns {String} A markdown formatted String representing the code quality comment section
+ * @returns {String} A markdown formatted String representing the code style comment section
  */
-const generateCodeQualityComment = (issues) => {
-    let codeQualityComment = '## Code quality\n'
+const generateCodeStyleComment = (issues) => {
+    let codeStyleComment = '## Code Style\n'
     for(let issue of issues){
-        codeQualityComment +='\n\n### ' + issue.name + '\n'
+        codeStyleComment +='\n\n### ' + issue.name + '\n'
         for(let location of issue.locations){
-            codeQualityComment += '- ' + location.fileName + ' ('+ location.line + ':' + location.column + ')\n'
-            codeQualityComment += location.message + '\n'
+            codeStyleComment += '- ' + location.fileName + ' ('+ location.line + ':' + location.column + ')\n'
+            codeStyleComment += location.message + '\n'
         }
     }
-    return codeQualityComment
+    return codeStyleComment
 }
 
 
@@ -200,7 +200,7 @@ const getFileObjectIssues = (files) => {
  *      ]
  * }
  */
-const getCodeQualityIssues = (checkstyleResultXml) => {
+const getCodeStyleIssues = (checkstyleResultXml) => {
     return new Promise((resolve, reject) => {
         const xml_string = fs.readFileSync(checkstyleResultXml, "utf8");
         parser.parseString(xml_string, function(error, result) {
@@ -228,13 +228,13 @@ const getCodeQualityIssues = (checkstyleResultXml) => {
 /**
  * 
  * @param {String} checkstyleResultXml the path to the corresponding XML file
- * @returns {Promise} that resolves with a Markdown formatted String corresponding to the code quality section
+ * @returns {Promise} that resolves with a Markdown formatted String corresponding to the code style section
  */
-const getCodeQualityComment = (checkstyleResultXml) => {
+const getCodeStyleComment = (checkstyleResultXml) => {
     return new Promise((resolve, reject) => {
-        getCodeQualityIssues(checkstyleResultXml)
+        getCodeStyleIssues(checkstyleResultXml)
         .then((issues) => {
-            resolve(generateCodeQualityComment(issues))
+            resolve(generateCodeStyleComment(issues))
         })
         .catch((error) => {
             reject(error)
@@ -242,4 +242,4 @@ const getCodeQualityComment = (checkstyleResultXml) => {
     })
 }
 
-module.exports = { getCodeQualityComment };
+module.exports = { getCodeStyleComment };
