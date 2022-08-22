@@ -34,7 +34,8 @@ const run = () => {
     
     ]).then((data) => {
         const  report = '# Report\n' +
-        '[Documentation](https://github.com/tupac-rocher/student-friendly-pipeline-example#feedback-report)\n'+
+        'You can find below the quality assessment of the project with regards to test coverage, design metrics, code style and code smells.\n'+
+        'For more information check the [documentation](https://github.com/tupac-rocher/student-friendly-pipeline-example#feedback-report)\n'+
         data[0] + 
         data[1] +
         data[2] +
