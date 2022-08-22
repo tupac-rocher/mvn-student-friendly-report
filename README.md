@@ -27,7 +27,7 @@ You can use it in your Github Actions workflow.
 
 | Variable                | Description                                                    |   
 | ----------------------- | -------------------------------------------------------------- |
-| `report-comment` | A Markdown formatted String displaying the report composed of 4 categories:<br> - test coverage<br> - metrics<br> - code quality<br> - code smells |
+| `report-comment` | A Markdown formatted String displaying the report composed of 4 categories:<br> - test coverage<br> - design metrics<br> - code style<br> - code smells |
 
 ## Example usage
 
