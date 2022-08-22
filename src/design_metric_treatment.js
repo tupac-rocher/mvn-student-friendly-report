@@ -404,8 +404,8 @@ const getDesignMetricComment = (ckMainFile, metricsXMLFile) => {
                 const classMetricsComment = getClassMetricsComment(classes)
                 const methodMetricsComment = getMethodMetricsComment(jasomeData.methods)
                 
-                const metricsFormattedComment = '## Design Metrics\n' + classMetricsComment + methodMetricsComment
-                resolve(metricsFormattedComment)
+                const designMetricsFormattedComment = '## Design Metrics\n' + classMetricsComment + methodMetricsComment
+                resolve(designMetricsFormattedComment)
         })
         .catch((error) => {
             reject(error)
