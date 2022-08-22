@@ -87,14 +87,20 @@ const getImplementationCodeSmells = (data) => {
     // List of design code smells reported
     let codeSmellsReported = [... new Set(data.map((result) => result['Code Smell']))]
 
+    // List of implementation smells to filter out
+    let unchosenCodeSmells = ['Abstract Function Call From Constructor']
+
     for(let codeSmell of codeSmellsReported){
         const newCodeSmell = {
             name: codeSmell,
             files: []
         }
         for(let result of data){
-            if(result['Code Smell'] === codeSmell){
-                newCodeSmell.files.push(result['Package Name'] + '.' + result['Type Name'] + '.' + result['Method Name'])
+            // Only chosen code smells
+            if(!unchosenCodeSmells.includes(codeSmell)){
+                if(result['Code Smell'] === codeSmell){
+                    newCodeSmell.files.push(result['Package Name'] + '.' + result['Type Name'] + '.' + result['Method Name'])
+                }
             }
         }
         codeSmells.push(newCodeSmell)
