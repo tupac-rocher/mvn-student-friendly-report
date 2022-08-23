@@ -91,19 +91,19 @@ const getImplementationCodeSmells = (data) => {
     let unchosenCodeSmells = ['Abstract Function Call From Constructor']
 
     for(let codeSmell of codeSmellsReported){
-        const newCodeSmell = {
-            name: codeSmell,
-            files: []
-        }
-        for(let result of data){
-            // Only chosen code smells
-            if(!unchosenCodeSmells.includes(codeSmell)){
+        // Only chosen code smells
+        if(!unchosenCodeSmells.includes(codeSmell)){
+            const newCodeSmell = {
+                name: codeSmell,
+                files: []
+            }
+            for(let result of data){
                 if(result['Code Smell'] === codeSmell){
                     newCodeSmell.files.push(result['Package Name'] + '.' + result['Type Name'] + '.' + result['Method Name'])
                 }
             }
+            codeSmells.push(newCodeSmell)
         }
-        codeSmells.push(newCodeSmell)
         
     }
     return codeSmells
